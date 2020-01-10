@@ -1,0 +1,160 @@
+From 45c24a8f95c98aba181aac9a2cd89b54ce575f43 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Thu, 17 May 2018 15:52:18 +1000
+Subject: [PATCH libinput 2/7] Automake backports
+
+This is missing the documentation backports, we don't ship those anyway
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+---
+ src/Makefile.am   |  4 +++-
+ test/Makefile.am  | 31 +++++++++++++++++++++++++------
+ tools/Makefile.am | 16 +++++++++++-----
+ 3 files changed, 39 insertions(+), 12 deletions(-)
+
+diff --git a/src/Makefile.am b/src/Makefile.am
+index 6723d5ae..61208f10 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -11,7 +11,9 @@ libinput_la_SOURCES =			\
+ 	libinput-private.h		\
+ 	evdev.c				\
+ 	evdev.h				\
+-	evdev-lid.c			\
++	evdev-debounce.c		\
++	evdev-fallback.c		\
++	evdev-fallback.h		\
+ 	evdev-middle-button.c		\
+ 	evdev-mt-touchpad.c		\
+ 	evdev-mt-touchpad.h		\
+diff --git a/test/Makefile.am b/test/Makefile.am
+index 5cb89a65..3d9c1643 100644
+--- a/test/Makefile.am
++++ b/test/Makefile.am
+@@ -29,10 +29,15 @@ liblitest_la_SOURCES = \
+ 	litest-device-cyborg-rat-5.c \
+ 	litest-device-elantech-touchpad.c \
+ 	litest-device-generic-singletouch.c \
++	litest-device-gpio-keys.c \
+ 	litest-device-huion-pentablet.c \
++	litest-device-hp-wmi-hotkeys.c \
++	litest-device-ignored-mouse.c \
+ 	litest-device-keyboard.c \
+ 	litest-device-keyboard-all-codes.c \
+ 	litest-device-keyboard-razer-blackwidow.c \
++	litest-device-keyboard-razer-blade-stealth.c \
++	litest-device-keyboard-razer-blade-stealth-videoswitch.c \
+ 	litest-device-lid-switch.c \
+ 	litest-device-lid-switch-surface3.c \
+ 	litest-device-logitech-trackball.c \
+@@ -44,6 +49,7 @@ liblitest_la_SOURCES = \
+ 	litest-device-mouse-low-dpi.c \
+ 	litest-device-mouse-wheel-click-angle.c \
+ 	litest-device-mouse-wheel-click-count.c \
++	litest-device-ms-nano-transceiver-mouse.c \
+ 	litest-device-ms-surface-cover.c \
+ 	litest-device-protocol-a-touch-screen.c \
+ 	litest-device-qemu-usb-tablet.c \
+@@ -54,9 +60,14 @@ liblitest_la_SOURCES = \
+ 	litest-device-synaptics-st.c \
+ 	litest-device-synaptics-t440.c \
+ 	litest-device-synaptics-x1-carbon-3rd.c \
++	litest-device-thinkpad-extrabuttons.c \
+ 	litest-device-trackpoint.c \
+ 	litest-device-touch-screen.c \
+ 	litest-device-touchscreen-fuzz.c \
++	litest-device-uclogic-tablet.c \
++	litest-device-wacom-bamboo-2fg-finger.c \
++	litest-device-wacom-bamboo-2fg-pad.c \
++	litest-device-wacom-bamboo-2fg-pen.c \
+ 	litest-device-wacom-bamboo-16fg-pen.c \
+ 	litest-device-wacom-cintiq-12wx-pen.c \
+ 	litest-device-wacom-cintiq-13hdt-finger.c \
+@@ -72,6 +83,7 @@ liblitest_la_SOURCES = \
+ 	litest-device-wacom-intuos5-pen.c \
+ 	litest-device-wacom-isdv4-e6-pen.c \
+ 	litest-device-wacom-isdv4-e6-finger.c \
++	litest-device-wacom-mobilestudio-pro-pad.c \
+ 	litest-device-waltop-tablet.c \
+ 	litest-device-wheel-only.c \
+ 	litest-device-xen-virtual-pointer.c \
+@@ -81,9 +93,11 @@ liblitest_la_SOURCES = \
+ liblitest_la_LIBADD = $(top_builddir)/src/libinput-util.la
+ liblitest_la_CFLAGS = $(AM_CFLAGS) \
+ 	      -DLIBINPUT_MODEL_QUIRKS_UDEV_RULES_FILE="\"$(abs_top_builddir)/udev/90-libinput-model-quirks-litest.rules\"" \
+-	      -DLIBINPUT_MODEL_QUIRKS_UDEV_HWDB_FILE="\"$(abs_top_srcdir)/udev/90-libinput-model-quirks.hwdb\"" \
+-	      -DLIBINPUT_TEST_DEVICE_RULES_FILE="\"$(abs_top_srcdir)/udev/80-libinput-test-device.rules\"" \
+-	      -DLIBINPUT_DEVICE_GROUPS_RULES_FILE="\"$(abs_top_srcdir)/udev/80-libinput-device-groups-litest.rules\""
++	      -DLIBINPUT_MODEL_QUIRKS_UDEV_HWDB_FILE="\"$(abs_top_builddir)/udev/90-libinput-model-quirks.hwdb\"" \
++	      -DLIBINPUT_TEST_DEVICE_RULES_FILE="\"$(abs_top_builddir)/udev/80-libinput-test-device.rules\"" \
++	      -DLIBINPUT_DEVICE_GROUPS_RULES_FILE="\"$(abs_top_builddir)/udev/80-libinput-device-groups-litest.rules\"" \
++	      $(NULL)
++
+ if HAVE_LIBUNWIND
+ liblitest_la_LIBADD += $(LIBUNWIND_LIBS) -ldl
+ liblitest_la_CFLAGS += $(LIBUNWIND_CFLAGS)
+@@ -106,7 +120,8 @@ if RUN_TESTS
+ TESTS = $(run_tests) symbols-leak-test
+ endif
+ 
+-libinput_test_suite_runner_SOURCES = test-udev.c \
++libinput_test_suite_runner_SOURCES = $(liblitest_la_SOURCES) \
++				     test-udev.c \
+ 				     test-path.c \
+ 				     test-pointer.c \
+ 				     test-touch.c \
+@@ -122,9 +137,13 @@ libinput_test_suite_runner_SOURCES = test-udev.c \
+ 				     test-keyboard.c \
+ 				     test-device.c \
+ 				     test-gestures.c \
+-				     test-lid.c
++				     test-switch.c
++
++libinput_test_suite_runner_CFLAGS = $(AM_CFLAGS) \
++				    $(liblitest_la_CFLAGS) \
++				    -DLIBINPUT_LT_VERSION="\"$(LIBINPUT_LT_VERSION)\"" \
++				    $(NULL)
+ 
+-libinput_test_suite_runner_CFLAGS = $(AM_CFLAGS) -DLIBINPUT_LT_VERSION="\"$(LIBINPUT_LT_VERSION)\""
+ libinput_test_suite_runner_LDADD = $(TEST_LIBS)
+ libinput_test_suite_runner_LDFLAGS = -no-install
+ 
+diff --git a/tools/Makefile.am b/tools/Makefile.am
+index 2c8660bf..7affdf76 100644
+--- a/tools/Makefile.am
++++ b/tools/Makefile.am
+@@ -2,6 +2,7 @@ noinst_PROGRAMS = ptraccel-debug
+ bin_PROGRAMS = libinput
+ toolsdir = $(libexecdir)/libinput
+ tools_PROGRAMS =
++tools_SCRIPTS =
+ bin_SCRIPTS = libinput-list-devices.compat libinput-debug-events.compat
+ noinst_LTLIBRARIES = libshared.la
+ 
+@@ -46,13 +47,18 @@ libinput_measure_CFLAGS = $(AM_CFLAGS) $(LIBUDEV_CFLAGS) $(LIBEVDEV_CFLAGS) \
+ 		  -DLIBINPUT_TOOL_PATH="\"@libexecdir@/libinput\""
+ dist_man1_MANS += libinput-measure.1
+ 
+-tools_PROGRAMS += libinput-measure-touchpad-tap
+-libinput_measure_touchpad_tap_SOURCES = \
+-		     libinput-measure-touchpad-tap.c
+-libinput_measure_touchpad_tap_LDADD = ../src/libinput.la libshared.la $(LIBUDEV_LIBS) $(LIBEVDEV_LIBS)
+-libinput_measure_touchpad_tap_CFLAGS = $(AM_CFLAGS) $(LIBUDEV_CFLAGS) $(LIBEVDEV_CFLAGS)
++tools_SCRIPTS += libinput-measure-touch-size
++dist_man1_MANS += libinput-measure-touch-size.1
++
++tools_SCRIPTS += libinput-measure-touchpad-tap
+ dist_man1_MANS += libinput-measure-touchpad-tap.1
+ 
++tools_SCRIPTS += libinput-measure-touchpad-pressure
++dist_man1_MANS += libinput-measure-touchpad-pressure.1
++
++tools_SCRIPTS += libinput-measure-trackpoint-range
++dist_man1_MANS += libinput-measure-trackpoint-range.1
++
+ if BUILD_DEBUG_GUI
+ tools_PROGRAMS += libinput-debug-gui
+ libinput_debug_gui_SOURCES = libinput-debug-gui.c
+-- 
+2.14.3
+

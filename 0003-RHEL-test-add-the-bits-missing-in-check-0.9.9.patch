@@ -1,0 +1,68 @@
+From 0fba429dd916e5e879eafd376c2035aa07b25804 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Tue, 14 Mar 2017 10:23:22 +1000
+Subject: [PATCH libinput 3/7] RHEL: test: add the bits missing in check 0.9.9
+
+Allow the test suite to build on RHEL 7.x
+
+RHEL patch - do not upstream
+
+https://bugzilla.redhat.com/show_bug.cgi?id=1431640
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+---
+ configure.ac  |  3 +--
+ test/litest.h | 23 +++++++++++++++++++++++
+ 2 files changed, 24 insertions(+), 2 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index eabc9e14..197dbe42 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -158,9 +158,8 @@ AC_ARG_ENABLE(tests,
+ 	      [build_tests="$enableval"],
+ 	      [build_tests="yes"])
+ 
+-
+ if test "x$build_tests" = "xyes"; then
+-	PKG_CHECK_MODULES(CHECK, [check >= 0.9.10])
++	PKG_CHECK_MODULES(CHECK, [check >= 0.9.9])
+ 
+ 	AC_PATH_PROG(VALGRIND, [valgrind])
+ 
+diff --git a/test/litest.h b/test/litest.h
+index 0c57e158..f51e6812 100644
+--- a/test/litest.h
++++ b/test/litest.h
+@@ -60,6 +60,29 @@ struct test_device {
+ 		__VA_ARGS__ \
+ 	};
+ 
++#ifndef ck_assert_ptr_ne
++#define _ck_assert_ptr(X, OP, Y) do { \
++	const void *px_ = (X); \
++	const void *py_ = (Y); \
++	ck_assert_msg(px_ OP py_, \
++		      "Assertion %s failed: %s == %#x, %s == %#x", \
++		      #X " " #OP " " #Y, #X, px_, #Y, py_); \
++} while (0)
++#define ck_assert_ptr_ne(X, Y) _ck_assert_ptr(X, !=, Y)
++#define ck_assert_ptr_eq(X, Y) _ck_assert_ptr(X, ==, Y)
++#endif
++
++#ifndef ck_assert_uint_eq
++#define _ck_assert_uint(X, OP, Y) do { \
++	uintmax_t ux_ = (X); \
++	uintmax_t uy_ = (Y); \
++	ck_assert_msg(ux_ OP uy_, \
++		      "Assertion %s failed: %s == %#ju, %s == %#ju", \
++		      #X " " #OP " " #Y, #X, ux_, #Y, uy_); \
++} while(0)
++#define ck_assert_uint_eq(X, Y) _ck_assert_uint(X, ==, Y)
++#endif
++
+ extern void litest_setup_tests_udev(void);
+ extern void litest_setup_tests_path(void);
+ extern void litest_setup_tests_pointer(void);
+-- 
+2.14.3
+

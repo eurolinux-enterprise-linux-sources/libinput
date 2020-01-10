@@ -1,0 +1,146 @@
+From 71a303503b5412c5182855fb6b378908a4362a10 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Tue, 14 Mar 2017 11:43:18 +1000
+Subject: [PATCH libinput 5/7] test: fix tests for kernels without
+ UI_GET_SYSNAME
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+---
+ test/litest.h        | 14 ++++++++++++++
+ test/test-switch.c   |  3 +++
+ test/test-tablet.c   |  4 ++++
+ test/test-touch.c    |  2 ++
+ test/test-touchpad.c |  4 ++++
+ 5 files changed, 27 insertions(+)
+
+diff --git a/test/litest.h b/test/litest.h
+index f51e6812..d47a76a2 100644
+--- a/test/litest.h
++++ b/test/litest.h
+@@ -29,6 +29,7 @@
+ #include <stdbool.h>
+ #include <stdarg.h>
+ #include <check.h>
++#include <unistd.h>
+ #include <libevdev/libevdev.h>
+ #include <libevdev/libevdev-uinput.h>
+ #include <libinput.h>
+@@ -83,6 +84,19 @@ struct test_device {
+ #define ck_assert_uint_eq(X, Y) _ck_assert_uint(X, ==, Y)
+ #endif
+ 
++
++/**
++ * Forces a pause on kernels where we don't have UI_GET_SYSNAME and rely on
++ * timestamps in the uinput device
++ */
++static inline void
++litest_duplicate_device_pause(void)
++{
++#ifndef UI_GET_SYSNAME
++	sleep(1);
++#endif
++}
++
+ extern void litest_setup_tests_udev(void);
+ extern void litest_setup_tests_path(void);
+ extern void litest_setup_tests_pointer(void);
+diff --git a/test/test-switch.c b/test/test-switch.c
+index 65e85102..e615c409 100644
+--- a/test/test-switch.c
++++ b/test/test-switch.c
+@@ -767,10 +767,13 @@ START_TEST(lid_update_hw_on_key_multiple_keyboards)
+ 	if (!switch_has_lid(sw))
+ 		return;
+ 
++	litest_duplicate_device_pause();
+ 	keyboard1 = litest_add_device(li,
+ 				LITEST_KEYBOARD_BLADE_STEALTH_VIDEOSWITCH);
+ 	libinput_dispatch(li);
+ 
++	litest_duplicate_device_pause();
++
+ 	keyboard2 = litest_add_device(li, LITEST_KEYBOARD_BLADE_STEALTH);
+ 	libinput_dispatch(li);
+ 
+diff --git a/test/test-tablet.c b/test/test-tablet.c
+index b32aaad6..cd20383c 100644
+--- a/test/test-tablet.c
++++ b/test/test-tablet.c
+@@ -98,6 +98,8 @@ START_TEST(button_seat_count)
+ 	if (!libevdev_has_event_code(dev->evdev, EV_KEY, BTN_STYLUS))
+ 		return;
+ 
++	litest_duplicate_device_pause();
++
+ 	dev2 = litest_add_device(li, LITEST_WACOM_CINTIQ_13HDT_PEN);
+ 	litest_tablet_proximity_in(dev, 10, 10, axes);
+ 	litest_tablet_proximity_in(dev2, 10, 10, axes);
+@@ -2197,6 +2199,7 @@ START_TEST(tools_with_serials)
+ 		 * available or isn't used by libevdev (1.3, commit 2ff45c73).
+ 		 * Put a sleep(1) here and that usually fixes it.
+ 		 */
++		litest_duplicate_device_pause();
+ 
+ 		litest_push_event_frame(dev[i]);
+ 		litest_tablet_proximity_in(dev[i], 10, 10, NULL);
+@@ -2244,6 +2247,7 @@ START_TEST(tools_without_serials)
+ 		 * available or isn't used by libevdev (1.3, commit 2ff45c73).
+ 		 * Put a sleep(1) here and that usually fixes it.
+ 		 */
++		litest_duplicate_device_pause();
+ 
+ 		litest_tablet_proximity_in(dev[i], 10, 10, NULL);
+ 
+diff --git a/test/test-touch.c b/test/test-touch.c
+index b3a6d0a0..f1524274 100644
+--- a/test/test-touch.c
++++ b/test/test-touch.c
+@@ -143,6 +143,8 @@ START_TEST(touch_seat_slot)
+ 	struct litest_device *dev2;
+ 	struct libinput *li = dev1->libinput;
+ 
++	litest_duplicate_device_pause();
++
+ 	dev2 = litest_add_device(li, LITEST_WACOM_TOUCH);
+ 
+ 	litest_drain_events(li);
+diff --git a/test/test-touchpad.c b/test/test-touchpad.c
+index d02cd162..15435393 100644
+--- a/test/test-touchpad.c
++++ b/test/test-touchpad.c
+@@ -4261,6 +4261,7 @@ START_TEST(touchpad_dwt_multiple_keyboards)
+ 	enable_dwt(touchpad);
+ 
+ 	k1 = litest_add_device(li, LITEST_KEYBOARD);
++	litest_duplicate_device_pause();
+ 	k2 = litest_add_device(li, LITEST_KEYBOARD);
+ 
+ 	litest_keyboard_key(k1, KEY_A, true);
+@@ -4301,6 +4302,7 @@ START_TEST(touchpad_dwt_multiple_keyboards_bothkeys)
+ 	enable_dwt(touchpad);
+ 
+ 	k1 = litest_add_device(li, LITEST_KEYBOARD);
++	litest_duplicate_device_pause();
+ 	k2 = litest_add_device(li, LITEST_KEYBOARD);
+ 
+ 	litest_keyboard_key(k1, KEY_A, true);
+@@ -4330,6 +4332,7 @@ START_TEST(touchpad_dwt_multiple_keyboards_bothkeys_modifier)
+ 	enable_dwt(touchpad);
+ 
+ 	k1 = litest_add_device(li, LITEST_KEYBOARD);
++	litest_duplicate_device_pause();
+ 	k2 = litest_add_device(li, LITEST_KEYBOARD);
+ 
+ 	litest_keyboard_key(k1, KEY_RIGHTCTRL, true);
+@@ -4369,6 +4372,7 @@ START_TEST(touchpad_dwt_multiple_keyboards_remove)
+ 	enable_dwt(touchpad);
+ 
+ 	keyboards[0] = litest_add_device(li, LITEST_KEYBOARD);
++	litest_duplicate_device_pause();
+ 	keyboards[1] = litest_add_device(li, LITEST_KEYBOARD);
+ 
+ 	litest_keyboard_key(keyboards[0], KEY_A, true);
+-- 
+2.14.3
+
