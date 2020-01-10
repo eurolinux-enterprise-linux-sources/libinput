@@ -26,6 +26,13 @@
 #include "litest.h"
 #include "litest-int.h"
 
+static void
+litest_synaptics_i2c_setup(void)
+{
+	struct litest_device *d = litest_create_device(LITEST_SYNAPTICS_I2C);
+	litest_set_current_device(d);
+}
+
 static struct input_event down[] = {
 	{ .type = EV_ABS, .code = ABS_X, .value = LITEST_AUTO_ASSIGN  },
 	{ .type = EV_ABS, .code = ABS_Y, .value = LITEST_AUTO_ASSIGN },
@@ -89,9 +96,11 @@ static const char udev_rule[] =
 "\n"
 "LABEL=\"touchpad_end\"";
 
-TEST_DEVICE("synaptics-i2c",
+struct litest_test_device litest_synaptics_i2c_device = {
 	.type = LITEST_SYNAPTICS_I2C,
 	.features = LITEST_TOUCHPAD | LITEST_CLICKPAD | LITEST_BUTTON,
+	.shortname = "synaptics-i2c",
+	.setup = litest_synaptics_i2c_setup,
 	.interface = &interface,
 
 	.name = "DLL0704:01 06CB:76AD Touchpad",
@@ -99,4 +108,4 @@ TEST_DEVICE("synaptics-i2c",
 	.events = events,
 	.absinfo = absinfo,
 	.udev_rule = udev_rule,
-)
+};

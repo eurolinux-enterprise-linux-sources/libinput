@@ -26,6 +26,12 @@
 #include "litest.h"
 #include "litest-int.h"
 
+static void litest_bcm5974_setup(void)
+{
+	struct litest_device *d = litest_create_device(LITEST_BCM5974);
+	litest_set_current_device(d);
+}
+
 static struct input_event down[] = {
 	{ .type = EV_ABS, .code = ABS_X, .value = LITEST_AUTO_ASSIGN  },
 	{ .type = EV_ABS, .code = ABS_Y, .value = LITEST_AUTO_ASSIGN },
@@ -34,9 +40,7 @@ static struct input_event down[] = {
 	{ .type = EV_ABS, .code = ABS_MT_TRACKING_ID, .value = LITEST_AUTO_ASSIGN },
 	{ .type = EV_ABS, .code = ABS_MT_POSITION_X, .value = LITEST_AUTO_ASSIGN },
 	{ .type = EV_ABS, .code = ABS_MT_POSITION_Y, .value = LITEST_AUTO_ASSIGN },
-	{ .type = EV_ABS, .code = ABS_MT_ORIENTATION, .value = LITEST_AUTO_ASSIGN },
-	{ .type = EV_ABS, .code = ABS_MT_TOUCH_MAJOR, .value = LITEST_AUTO_ASSIGN },
-	{ .type = EV_ABS, .code = ABS_MT_TOUCH_MINOR, .value = LITEST_AUTO_ASSIGN },
+	{ .type = EV_ABS, .code = ABS_MT_PRESSURE, .value = LITEST_AUTO_ASSIGN  },
 	{ .type = EV_SYN, .code = SYN_REPORT, .value = 0 },
 	{ .type = -1, .code = -1 },
 };
@@ -48,9 +52,7 @@ static struct input_event move[] = {
 	{ .type = EV_ABS, .code = ABS_PRESSURE, .value = LITEST_AUTO_ASSIGN  },
 	{ .type = EV_ABS, .code = ABS_MT_POSITION_X, .value = LITEST_AUTO_ASSIGN },
 	{ .type = EV_ABS, .code = ABS_MT_POSITION_Y, .value = LITEST_AUTO_ASSIGN },
-	{ .type = EV_ABS, .code = ABS_MT_ORIENTATION, .value = LITEST_AUTO_ASSIGN },
-	{ .type = EV_ABS, .code = ABS_MT_TOUCH_MAJOR, .value = LITEST_AUTO_ASSIGN },
-	{ .type = EV_ABS, .code = ABS_MT_TOUCH_MINOR, .value = LITEST_AUTO_ASSIGN },
+	{ .type = EV_ABS, .code = ABS_MT_PRESSURE, .value = LITEST_AUTO_ASSIGN  },
 	{ .type = EV_SYN, .code = SYN_REPORT, .value = 0 },
 	{ .type = -1, .code = -1 },
 };
@@ -62,12 +64,6 @@ get_axis_default(struct litest_device *d, unsigned int evcode, int32_t *value)
 	case ABS_PRESSURE:
 	case ABS_MT_PRESSURE:
 		*value = 30;
-		return 0;
-	case ABS_MT_TOUCH_MAJOR:
-	case ABS_MT_TOUCH_MINOR:
-		*value = 200;
-		return 0;
-	case ABS_MT_ORIENTATION:
 		return 0;
 	}
 	return 1;
@@ -94,6 +90,7 @@ static struct input_absinfo absinfo[] = {
 	{ ABS_MT_WIDTH_MAJOR, 0, 2048, 81, 0, 0 },
 	{ ABS_MT_WIDTH_MINOR, 0, 2048, 81, 0, 0 },
 	{ ABS_MT_TRACKING_ID, 0, 65535, 0, 0, 0 },
+	{ ABS_MT_PRESSURE, 0, 255, 0, 0, 0 },
 	{ .value = -1 },
 };
 
@@ -115,14 +112,16 @@ static int events[] = {
 	-1, -1
 };
 
-TEST_DEVICE("bcm5974",
+struct litest_test_device litest_bcm5974_device = {
 	.type = LITEST_BCM5974,
 	.features = LITEST_TOUCHPAD | LITEST_CLICKPAD |
 		    LITEST_BUTTON | LITEST_APPLE_CLICKPAD,
+	.shortname = "bcm5974",
+	.setup = litest_bcm5974_setup,
 	.interface = &interface,
 
 	.name = "bcm5974",
 	.id = &input_id,
 	.events = events,
 	.absinfo = absinfo,
-)
+};

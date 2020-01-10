@@ -1,0 +1,26 @@
+From 019e52ed0959ffc0d176bad0f6a252ea40c3d339 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Tue, 14 Mar 2017 12:24:36 +1000
+Subject: [PATCH 6/6] test: add missing linebreak to error message
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+---
+ test/litest.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/test/litest.c b/test/litest.c
+index 7205d08..f7bb228 100644
+--- a/test/litest.c
++++ b/test/litest.c
+@@ -2392,7 +2392,7 @@ litest_create_uinput(const char *name,
+ 	   http://cgit.freedesktop.org/libevdev/commit/?id=debe9b030c8069cdf78307888ef3b65830b25122 */
+ 	if (rc == -EBADF)
+ 		rc = -EACCES;
+-	litest_assert_msg(rc == 0, "Failed to create uinput device: %s", strerror(-rc));
++	litest_assert_msg(rc == 0, "Failed to create uinput device: %s\n", strerror(-rc));
+ 
+ 	libevdev_free(dev);
+ 
+-- 
+1.8.3.1
+

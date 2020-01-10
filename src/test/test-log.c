@@ -28,7 +28,6 @@
 #include <fcntl.h>
 #include <libinput.h>
 #include <unistd.h>
-#include <stdarg.h>
 
 #include "litest.h"
 
@@ -81,9 +80,6 @@ START_TEST(log_handler_invoked)
 {
 	struct libinput *li;
 
-	log_handler_context = NULL;
-	log_handler_called = 0;
-
 	li = libinput_path_create_context(&simple_interface, NULL);
 
 	libinput_log_set_priority(li, LIBINPUT_LOG_PRIORITY_DEBUG);
@@ -93,19 +89,17 @@ START_TEST(log_handler_invoked)
 	libinput_path_add_device(li, "/tmp");
 
 	ck_assert_int_gt(log_handler_called, 0);
+	log_handler_called = 0;
 
 	libinput_unref(li);
 
 	log_handler_context = NULL;
-	log_handler_called = 0;
 }
 END_TEST
 
 START_TEST(log_handler_NULL)
 {
 	struct libinput *li;
-
-	log_handler_called = 0;
 
 	li = libinput_path_create_context(&simple_interface, NULL);
 	libinput_log_set_priority(li, LIBINPUT_LOG_PRIORITY_DEBUG);
@@ -114,19 +108,15 @@ START_TEST(log_handler_NULL)
 	libinput_path_add_device(li, "/tmp");
 
 	ck_assert_int_eq(log_handler_called, 0);
+	log_handler_called = 0;
 
 	libinput_unref(li);
-
-	log_handler_called = 0;
 }
 END_TEST
 
 START_TEST(log_priority)
 {
 	struct libinput *li;
-
-	log_handler_context = NULL;
-	log_handler_called = 0;
 
 	li = libinput_path_create_context(&simple_interface, NULL);
 	libinput_log_set_priority(li, LIBINPUT_LOG_PRIORITY_ERROR);
@@ -138,15 +128,15 @@ START_TEST(log_priority)
 	ck_assert_int_eq(log_handler_called, 1);
 
 	libinput_log_set_priority(li, LIBINPUT_LOG_PRIORITY_INFO);
-	/* event0 exists on any box we care to run the test suite on and we
-	 * currently prints *something* for each device */
+	/* event0 is usually Lid Switch which prints an info that
+	   we don't handle it */
 	libinput_path_add_device(li, "/dev/input/event0");
 	ck_assert_int_gt(log_handler_called, 1);
 
-	libinput_unref(li);
-
-	log_handler_context = NULL;
 	log_handler_called = 0;
+
+	libinput_unref(li);
+	log_handler_context = NULL;
 }
 END_TEST
 
@@ -158,13 +148,9 @@ axisrange_warning_log_handler(struct libinput *libinput,
 			      const char *format,
 			      va_list args)
 {
-	const char *substr;
-
 	axisrange_log_handler_called++;
 	litest_assert_notnull(format);
-
-	substr = strstr(format, "is outside expected range");
-	litest_assert_notnull(substr);
+	litest_assert_notnull(strstr(format, "is outside expected range"));
 }
 
 START_TEST(log_axisrange_warning)
@@ -194,7 +180,6 @@ START_TEST(log_axisrange_warning)
 	/* Expect only one message per 5 min */
 	ck_assert_int_eq(axisrange_log_handler_called, 1);
 
-	libinput_log_set_priority(li, LIBINPUT_LOG_PRIORITY_ERROR);
 	litest_restore_log_handler(li);
 	axisrange_log_handler_called = 0;
 }

@@ -103,7 +103,7 @@ tp_edge_scroll_set_timer(struct tp_dispatch *tp,
 		return;
 
 	libinput_timer_set(&t->scroll.timer,
-			   t->time + DEFAULT_SCROLL_LOCK_TIMEOUT);
+			   t->millis + DEFAULT_SCROLL_LOCK_TIMEOUT);
 }
 
 static void
@@ -137,6 +137,8 @@ tp_edge_scroll_handle_none(struct tp_dispatch *tp,
 			   struct tp_touch *t,
 			   enum scroll_event event)
 {
+	struct libinput *libinput = tp_libinput_context(tp);
+
 	switch (event) {
 	case SCROLL_EVENT_TOUCH:
 		if (tp_touch_get_edge(tp, t)) {
@@ -151,7 +153,7 @@ tp_edge_scroll_handle_none(struct tp_dispatch *tp,
 	case SCROLL_EVENT_RELEASE:
 	case SCROLL_EVENT_TIMEOUT:
 	case SCROLL_EVENT_POSTED:
-		evdev_log_bug_libinput(tp->device,
+		log_bug_libinput(libinput,
 				 "unexpected scroll event %d in none state\n",
 				 event);
 		break;
@@ -163,11 +165,13 @@ tp_edge_scroll_handle_edge_new(struct tp_dispatch *tp,
 			       struct tp_touch *t,
 			       enum scroll_event event)
 {
+	struct libinput *libinput = tp_libinput_context(tp);
+
 	switch (event) {
 	case SCROLL_EVENT_TOUCH:
-		evdev_log_bug_libinput(tp->device,
-			       "unexpected scroll event %d in edge new state\n",
-			       event);
+		log_bug_libinput(libinput,
+				 "unexpected scroll event %d in edge new state\n",
+				 event);
 		break;
 	case SCROLL_EVENT_MOTION:
 		t->scroll.edge &= tp_touch_get_edge(tp, t);
@@ -190,10 +194,12 @@ tp_edge_scroll_handle_edge(struct tp_dispatch *tp,
 			   struct tp_touch *t,
 			   enum scroll_event event)
 {
+	struct libinput *libinput = tp_libinput_context(tp);
+
 	switch (event) {
 	case SCROLL_EVENT_TOUCH:
 	case SCROLL_EVENT_TIMEOUT:
-		evdev_log_bug_libinput(tp->device,
+		log_bug_libinput(libinput,
 				 "unexpected scroll event %d in edge state\n",
 				 event);
 		break;
@@ -219,11 +225,13 @@ tp_edge_scroll_handle_area(struct tp_dispatch *tp,
 			   struct tp_touch *t,
 			   enum scroll_event event)
 {
+	struct libinput *libinput = tp_libinput_context(tp);
+
 	switch (event) {
 	case SCROLL_EVENT_TOUCH:
 	case SCROLL_EVENT_TIMEOUT:
 	case SCROLL_EVENT_POSTED:
-		evdev_log_bug_libinput(tp->device,
+		log_bug_libinput(libinput,
 				 "unexpected scroll event %d in area state\n",
 				 event);
 		break;
@@ -240,6 +248,7 @@ tp_edge_scroll_handle_event(struct tp_dispatch *tp,
 			    struct tp_touch *t,
 			    enum scroll_event event)
 {
+	struct libinput *libinput = tp_libinput_context(tp);
 	enum tp_edge_scroll_touch_state current = t->scroll.edge_state;
 
 	switch (current) {
@@ -257,11 +266,11 @@ tp_edge_scroll_handle_event(struct tp_dispatch *tp,
 		break;
 	}
 
-	evdev_log_debug(tp->device,
-			"edge state: %s → %s → %s\n",
-			edge_state_to_str(current),
-			edge_event_to_str(event),
-			edge_state_to_str(t->scroll.edge_state));
+	log_debug(libinput,
+		  "edge state: %s → %s → %s\n",
+		  edge_state_to_str(current),
+		  edge_event_to_str(event),
+		  edge_state_to_str(t->scroll.edge_state));
 }
 
 static void
@@ -280,7 +289,6 @@ tp_edge_scroll_init(struct tp_dispatch *tp, struct evdev_device *device)
 	bool want_horiz_scroll = true;
 	struct device_coords edges;
 	struct phys_coords mm = { 0.0, 0.0 };
-	int i;
 
 	evdev_device_get_size(device, &width, &height);
 	/* Touchpads smaller than 40mm are not tall enough to have a
@@ -303,19 +311,10 @@ tp_edge_scroll_init(struct tp_dispatch *tp, struct evdev_device *device)
 	else
 		tp->scroll.bottom_edge = INT_MAX;
 
-	i = 0;
 	tp_for_each_touch(tp, t) {
-		char timer_name[64];
-
-		snprintf(timer_name,
-			 sizeof(timer_name),
-			 "%s (%d) edgescroll",
-			 evdev_device_get_sysname(device),
-			 i);
 		t->scroll.direction = -1;
 		libinput_timer_init(&t->scroll.timer,
 				    tp_libinput_context(tp),
-				    timer_name,
 				    tp_edge_scroll_handle_timeout, t);
 	}
 }
@@ -325,10 +324,8 @@ tp_remove_edge_scroll(struct tp_dispatch *tp)
 {
 	struct tp_touch *t;
 
-	tp_for_each_touch(tp, t) {
+	tp_for_each_touch(tp, t)
 		libinput_timer_cancel(&t->scroll.timer);
-		libinput_timer_destroy(&t->scroll.timer);
-	}
 }
 
 void
@@ -362,13 +359,6 @@ tp_edge_scroll_handle_state(struct tp_dispatch *tp, uint64_t time)
 		case TOUCH_UPDATE:
 			tp_edge_scroll_handle_event(tp, t, SCROLL_EVENT_MOTION);
 			break;
-		case TOUCH_MAYBE_END:
-			/* This shouldn't happen we transfer to TOUCH_END
-			 * before processing state */
-			evdev_log_debug(tp->device,
-					"touch unexpected state %d\n",
-					t->state);
-			/* fallthrough */
 		case TOUCH_END:
 			tp_edge_scroll_handle_event(tp, t, SCROLL_EVENT_RELEASE);
 			break;
@@ -383,8 +373,6 @@ tp_edge_scroll_post_events(struct tp_dispatch *tp, uint64_t time)
 	struct tp_touch *t;
 	enum libinput_pointer_axis axis;
 	double *delta;
-	struct device_coords raw;
-	struct device_float_coords fraw;
 	struct normalized_coords normalized, tmp;
 	const struct normalized_coords zero = { 0.0, 0.0 };
 	const struct discrete_coords zero_discrete = { 0.0, 0.0 };
@@ -393,8 +381,7 @@ tp_edge_scroll_post_events(struct tp_dispatch *tp, uint64_t time)
 		if (!t->dirty)
 			continue;
 
-		if (t->palm.state != PALM_NONE ||
-		    t->thumb.state == THUMB_STATE_YES)
+		if (t->palm.state != PALM_NONE)
 			continue;
 
 		/* only scroll with the finger in the previous edge */
@@ -426,16 +413,14 @@ tp_edge_scroll_post_events(struct tp_dispatch *tp, uint64_t time)
 				continue; /* Don't know direction yet, skip */
 		}
 
-		raw = tp_get_delta(t);
-		fraw.x = raw.x;
-		fraw.y = raw.y;
+		normalized = tp_get_delta(t);
 		/* scroll is not accelerated */
-		normalized = tp_filter_motion_unaccelerated(tp, &fraw, time);
+		normalized = tp_filter_motion_unaccelerated(tp, &normalized, time);
 
 		switch (t->scroll.edge_state) {
 		case EDGE_SCROLL_TOUCH_STATE_NONE:
 		case EDGE_SCROLL_TOUCH_STATE_AREA:
-			evdev_log_bug_libinput(device,
+			log_bug_libinput(tp_libinput_context(tp),
 					 "unexpected scroll state %d\n",
 					 t->scroll.edge_state);
 			break;

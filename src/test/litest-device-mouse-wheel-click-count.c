@@ -26,6 +26,12 @@
 #include "litest.h"
 #include "litest-int.h"
 
+static void litest_mouse_setup(void)
+{
+	struct litest_device *d = litest_create_device(LITEST_MOUSE_WHEEL_CLICK_COUNT);
+	litest_set_current_device(d);
+}
+
 static struct input_id input_id = {
 	.bustype = 0x3,
 	.vendor = 0x1234,
@@ -47,16 +53,18 @@ static const char udev_rule[] =
 "KERNEL!=\"event*\", GOTO=\"wheel_click_count_end\"\n"
 "\n"
 "ATTRS{name}==\"litest Wheel Click Count Mouse*\",\\\n"
-"    ENV{MOUSE_WHEEL_CLICK_ANGLE}=\"-15\",\\\n"
-"    ENV{MOUSE_WHEEL_CLICK_ANGLE_HORIZONTAL}=\"13\",\\\n"
-"    ENV{MOUSE_WHEEL_CLICK_COUNT}=\"-14\",\\\n"
+"    ENV{MOUSE_WHEEL_CLICK_ANGLE}=\"-15\",\n"
+"    ENV{MOUSE_WHEEL_CLICK_ANGLE_HORIZONTAL}=\"13\",\n\\"
+"    ENV{MOUSE_WHEEL_CLICK_COUNT}=\"-14\",\n"
 "    ENV{MOUSE_WHEEL_CLICK_COUNT_HORIZONTAL}=\"27\"\\\n"
 "\n"
 "LABEL=\"wheel_click_count_end\"";
 
-TEST_DEVICE("mouse-wheelclickcount",
+struct litest_test_device litest_mouse_wheel_click_count_device = {
 	.type = LITEST_MOUSE_WHEEL_CLICK_COUNT,
 	.features = LITEST_RELATIVE | LITEST_BUTTON | LITEST_WHEEL,
+	.shortname = "mouse-wheelclickcount",
+	.setup = litest_mouse_setup,
 	.interface = NULL,
 
 	.name = "Wheel Click Count Mouse",
@@ -64,4 +72,4 @@ TEST_DEVICE("mouse-wheelclickcount",
 	.absinfo = NULL,
 	.events = events,
 	.udev_rule = udev_rule,
-)
+};

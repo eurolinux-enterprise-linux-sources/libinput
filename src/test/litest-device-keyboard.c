@@ -26,6 +26,12 @@
 #include "litest.h"
 #include "litest-int.h"
 
+static void litest_keyboard_setup(void)
+{
+	struct litest_device *d = litest_create_device(LITEST_KEYBOARD);
+	litest_set_current_device(d);
+}
+
 static struct input_id input_id = {
 	.bustype = 0x11,
 	.vendor = 0x1,
@@ -185,19 +191,18 @@ static int events[] = {
 	EV_KEY, KEY_SEARCH,
 	EV_KEY, KEY_MEDIA,
 	EV_KEY, KEY_FN,
-	EV_LED, LED_NUML,
-	EV_LED, LED_CAPSL,
-	EV_LED, LED_SCROLLL,
 	-1, -1,
 };
 
-TEST_DEVICE("default-keyboard",
+struct litest_test_device litest_keyboard_device = {
 	.type = LITEST_KEYBOARD,
 	.features = LITEST_KEYS,
+	.shortname = "default keyboard",
+	.setup = litest_keyboard_setup,
 	.interface = NULL,
 
 	.name = "AT Translated Set 2 keyboard",
 	.id = &input_id,
 	.events = events,
 	.absinfo = NULL,
-)
+};

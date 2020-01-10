@@ -23,7 +23,7 @@ digraph stack
     gsettings
   }
 
-  gsd [label="mutter"];
+  gsd [label="gnome-settings-daemon"];
 
   gsd -> gsettings
   gsd -> xserver

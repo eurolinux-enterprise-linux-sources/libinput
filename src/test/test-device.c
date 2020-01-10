@@ -61,6 +61,22 @@ START_TEST(device_sendevents_config_invalid)
 }
 END_TEST
 
+static inline bool
+touchpad_is_external(struct litest_device *dev)
+{
+	struct udev_device *udev_device;
+	const char *prop;
+	bool is_external;
+
+	udev_device = libinput_device_get_udev_device(dev->libinput_device);
+	prop = udev_device_get_property_value(udev_device,
+					      "ID_INPUT_TOUCHPAD_INTEGRATION");
+	is_external = prop && streq(prop, "external");
+	udev_device_unref(udev_device);
+
+	return is_external;
+}
+
 START_TEST(device_sendevents_config_touchpad)
 {
 	struct litest_device *dev = litest_current_device();
@@ -71,7 +87,7 @@ START_TEST(device_sendevents_config_touchpad)
 
 	/* The wacom devices in the test suite are external */
 	if (libevdev_get_id_vendor(dev->evdev) != VENDOR_ID_WACOM &&
-	    !litest_touchpad_is_external(dev))
+	    !touchpad_is_external(dev))
 		expected |=
 			LIBINPUT_CONFIG_SEND_EVENTS_DISABLED_ON_EXTERNAL_MOUSE;
 
@@ -91,7 +107,7 @@ START_TEST(device_sendevents_config_touchpad_superset)
 
 	/* The wacom devices in the test suite are external */
 	if (libevdev_get_id_vendor(dev->evdev) == VENDOR_ID_WACOM ||
-	    litest_touchpad_is_external(dev))
+	    touchpad_is_external(dev))
 		return;
 
 	device = dev->libinput_device;
@@ -463,8 +479,9 @@ START_TEST(device_disable_release_buttons)
 
 	device = dev->libinput_device;
 
-	litest_button_click_debounced(dev, li, BTN_LEFT, true);
+	litest_button_click(dev, BTN_LEFT, true);
 	litest_drain_events(li);
+	litest_assert_empty_queue(li);
 
 	status = libinput_device_config_send_events_set_mode(device,
 			LIBINPUT_CONFIG_SEND_EVENTS_DISABLED);
@@ -497,8 +514,9 @@ START_TEST(device_disable_release_keys)
 
 	device = dev->libinput_device;
 
-	litest_keyboard_key(dev, KEY_A, true);
+	litest_button_click(dev, KEY_A, true);
 	litest_drain_events(li);
+	litest_assert_empty_queue(li);
 
 	status = libinput_device_config_send_events_set_mode(device,
 			LIBINPUT_CONFIG_SEND_EVENTS_DISABLED);
@@ -616,7 +634,7 @@ START_TEST(device_disable_release_softbutton)
 	litest_drain_events(li);
 
 	litest_touch_down(dev, 0, 90, 90);
-	litest_button_click_debounced(dev, li, BTN_LEFT, true);
+	litest_button_click(dev, BTN_LEFT, true);
 
 	/* make sure softbutton works */
 	litest_assert_button_event(li,
@@ -633,7 +651,7 @@ START_TEST(device_disable_release_softbutton)
 
 	litest_assert_empty_queue(li);
 
-	litest_button_click_debounced(dev, li, BTN_LEFT, false);
+	litest_button_click(dev, BTN_LEFT, false);
 	litest_touch_up(dev, 0);
 
 	litest_assert_empty_queue(li);
@@ -669,8 +687,8 @@ START_TEST(device_disable_topsoftbutton)
 	litest_drain_events(li);
 
 	litest_touch_down(dev, 0, 90, 10);
-	litest_button_click_debounced(dev, li, BTN_LEFT, true);
-	litest_button_click_debounced(dev, li, BTN_LEFT, false);
+	litest_button_click(dev, BTN_LEFT, true);
+	litest_button_click(dev, BTN_LEFT, false);
 	litest_touch_up(dev, 0);
 
 	litest_wait_for_event(li);
@@ -742,20 +760,6 @@ START_TEST(device_context)
 	ck_assert(dev->libinput == libinput_device_get_context(dev->libinput_device));
 	seat = libinput_device_get_seat(dev->libinput_device);
 	ck_assert(dev->libinput == libinput_seat_get_context(seat));
-}
-END_TEST
-
-START_TEST(device_user_data)
-{
-	struct litest_device *dev = litest_current_device();
-	struct libinput_device *device = dev->libinput_device;
-	void *userdata = &dev; /* not referenced */
-
-	ck_assert(libinput_device_get_user_data(device) == NULL);
-	libinput_device_set_user_data(device, userdata);
-	ck_assert_ptr_eq(libinput_device_get_user_data(device), userdata);
-	libinput_device_set_user_data(device, NULL);
-	ck_assert(libinput_device_get_user_data(device) == NULL);
 }
 END_TEST
 
@@ -1464,119 +1468,6 @@ START_TEST(device_quirks_apple_magicmouse)
 }
 END_TEST
 
-START_TEST(device_quirks_logitech_marble_mouse)
-{
-	struct litest_device *dev = litest_current_device();
-	struct libinput *li = dev->libinput;
-
-	litest_drain_events(li);
-
-	ck_assert(!libinput_device_pointer_has_button(dev->libinput_device,
-						      BTN_MIDDLE));
-}
-END_TEST
-
-START_TEST(device_capability_at_least_one)
-{
-	struct litest_device *dev = litest_current_device();
-	struct libinput_device *device = dev->libinput_device;
-	enum libinput_device_capability caps[] = {
-		LIBINPUT_DEVICE_CAP_KEYBOARD,
-		LIBINPUT_DEVICE_CAP_POINTER,
-		LIBINPUT_DEVICE_CAP_TOUCH,
-		LIBINPUT_DEVICE_CAP_TABLET_TOOL,
-		LIBINPUT_DEVICE_CAP_TABLET_PAD,
-		LIBINPUT_DEVICE_CAP_GESTURE,
-		LIBINPUT_DEVICE_CAP_SWITCH,
-	};
-	enum libinput_device_capability *cap;
-	int ncaps = 0;
-
-	ARRAY_FOR_EACH(caps, cap) {
-		if (libinput_device_has_capability(device, *cap))
-			ncaps++;
-	}
-	ck_assert_int_gt(ncaps, 0);
-
-}
-END_TEST
-
-START_TEST(device_capability_check_invalid)
-{
-	struct litest_device *dev = litest_current_device();
-	struct libinput_device *device = dev->libinput_device;
-
-	ck_assert(!libinput_device_has_capability(device, -1));
-	ck_assert(!libinput_device_has_capability(device, 7));
-	ck_assert(!libinput_device_has_capability(device, 0xffff));
-
-}
-END_TEST
-
-START_TEST(device_has_size)
-{
-	struct litest_device *dev = litest_current_device();
-	struct libinput_device *device = dev->libinput_device;
-	double w, h;
-	int rc;
-
-	rc = libinput_device_get_size(device, &w, &h);
-	ck_assert_int_eq(rc, 0);
-	/* This matches the current set of test devices but may fail if
-	 * newer ones are added */
-	ck_assert_double_gt(w, 40);
-	ck_assert_double_gt(h, 20);
-}
-END_TEST
-
-START_TEST(device_has_no_size)
-{
-	struct litest_device *dev = litest_current_device();
-	struct libinput_device *device = dev->libinput_device;
-	double w = 45, h = 67;
-	int rc;
-
-	rc = libinput_device_get_size(device, &w, &h);
-	ck_assert_int_eq(rc, -1);
-	ck_assert_double_eq(w, 45);
-	ck_assert_double_eq(h, 67);
-}
-END_TEST
-
-START_TEST(device_get_output)
-{
-	struct litest_device *dev = litest_current_device();
-	struct libinput_device *device = dev->libinput_device;
-	const char *output_name;
-
-	output_name = libinput_device_get_output_name(device);
-	ck_assert_str_eq(output_name, "myOutput");
-}
-END_TEST
-
-START_TEST(device_no_output)
-{
-	struct litest_device *dev = litest_current_device();
-	struct libinput_device *device = dev->libinput_device;
-	const char *output_name;
-
-	output_name = libinput_device_get_output_name(device);
-	ck_assert(output_name == NULL);
-}
-END_TEST
-
-START_TEST(device_seat_phys_name)
-{
-	struct litest_device *dev = litest_current_device();
-	struct libinput_device *device = dev->libinput_device;
-	struct libinput_seat *seat = libinput_device_get_seat(device);
-	const char *seat_name;
-
-	seat_name = libinput_seat_get_physical_name(seat);
-	ck_assert(streq(seat_name, "seat0"));
-}
-END_TEST
-
 void
 litest_setup_tests_device(void)
 {
@@ -1607,7 +1498,6 @@ litest_setup_tests_device(void)
 	litest_add("device:sendevents", device_disable_topsoftbutton, LITEST_TOPBUTTONPAD, LITEST_ANY);
 	litest_add("device:id", device_ids, LITEST_ANY, LITEST_ANY);
 	litest_add_for_device("device:context", device_context, LITEST_SYNAPTICS_CLICKPAD_X220);
-	litest_add_for_device("device:context", device_user_data, LITEST_SYNAPTICS_CLICKPAD_X220);
 
 	litest_add("device:udev", device_get_udev_handle, LITEST_ANY, LITEST_ANY);
 
@@ -1642,19 +1532,4 @@ litest_setup_tests_device(void)
 	litest_add_for_device("device:quirks", device_quirks_no_abs_mt_y, LITEST_ANKER_MOUSE_KBD);
 	litest_add_for_device("device:quirks", device_quirks_cyborg_rat_mode_button, LITEST_CYBORG_RAT);
 	litest_add_for_device("device:quirks", device_quirks_apple_magicmouse, LITEST_MAGICMOUSE);
-	litest_add_for_device("device:quirks", device_quirks_logitech_marble_mouse, LITEST_LOGITECH_TRACKBALL);
-
-	litest_add("device:capability", device_capability_at_least_one, LITEST_ANY, LITEST_ANY);
-	litest_add("device:capability", device_capability_check_invalid, LITEST_ANY, LITEST_ANY);
-
-	litest_add("device:size", device_has_size, LITEST_TOUCHPAD, LITEST_ANY);
-	litest_add("device:size", device_has_size, LITEST_TABLET, LITEST_ANY);
-	litest_add("device:size", device_has_no_size, LITEST_ANY,
-		   LITEST_TOUCHPAD|LITEST_TABLET|LITEST_TOUCH|LITEST_ABSOLUTE|LITEST_SINGLE_TOUCH);
-
-	litest_add_for_device("device:output", device_get_output, LITEST_CALIBRATED_TOUCHSCREEN);
-	litest_add("device:output", device_no_output, LITEST_RELATIVE, LITEST_ANY);
-	litest_add("device:output", device_no_output, LITEST_KEYS, LITEST_ANY);
-
-	litest_add("device:seat", device_seat_phys_name, LITEST_ANY, LITEST_ANY);
 }

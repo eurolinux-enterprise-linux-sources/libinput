@@ -29,7 +29,6 @@
 #include "config.h"
 
 #include <stdbool.h>
-#include <stdarg.h>
 #include "linux/input.h"
 #include <libevdev/libevdev.h>
 
@@ -37,19 +36,24 @@
 #include "timer.h"
 #include "filter.h"
 
+/*
+ * The constant (linear) acceleration factor we use to normalize trackpoint
+ * deltas before calculating pointer acceleration.
+ */
+#define DEFAULT_TRACKPOINT_ACCEL 1.0
+
 /* The fake resolution value for abs devices without resolution */
 #define EVDEV_FAKE_RESOLUTION 1
 
 enum evdev_event_type {
 	EVDEV_NONE,
-	EVDEV_ABSOLUTE_TOUCH_DOWN = (1 << 0),
-	EVDEV_ABSOLUTE_MOTION = (1 << 1),
-	EVDEV_ABSOLUTE_TOUCH_UP = (1 << 2),
-	EVDEV_ABSOLUTE_MT= (1 << 3),
-	EVDEV_WHEEL = (1 << 4),
-	EVDEV_KEY = (1 << 5),
-	EVDEV_RELATIVE_MOTION = (1 << 6),
-	EVDEV_BUTTON = (1 << 7),
+	EVDEV_ABSOLUTE_TOUCH_DOWN,
+	EVDEV_ABSOLUTE_MOTION,
+	EVDEV_ABSOLUTE_TOUCH_UP,
+	EVDEV_ABSOLUTE_MT_DOWN,
+	EVDEV_ABSOLUTE_MT_MOTION,
+	EVDEV_ABSOLUTE_MT_UP,
+	EVDEV_RELATIVE_MOTION,
 };
 
 enum evdev_device_seat_capability {
@@ -59,7 +63,6 @@ enum evdev_device_seat_capability {
 	EVDEV_DEVICE_TABLET = (1 << 3),
 	EVDEV_DEVICE_TABLET_PAD = (1 << 4),
 	EVDEV_DEVICE_GESTURE = (1 << 5),
-	EVDEV_DEVICE_SWITCH = (1 << 6),
 };
 
 enum evdev_device_tags {
@@ -68,10 +71,6 @@ enum evdev_device_tags {
 	EVDEV_TAG_EXTERNAL_TOUCHPAD = (1 << 2),
 	EVDEV_TAG_TRACKPOINT = (1 << 3),
 	EVDEV_TAG_KEYBOARD = (1 << 4),
-	EVDEV_TAG_LID_SWITCH = (1 << 5),
-	EVDEV_TAG_INTERNAL_KEYBOARD = (1 << 6),
-	EVDEV_TAG_EXTERNAL_KEYBOARD = (1 << 7),
-	EVDEV_TAG_TABLET_MODE_SWITCH = (1 << 8),
 };
 
 enum evdev_middlebutton_state {
@@ -110,10 +109,11 @@ enum evdev_device_model {
 	EVDEV_MODEL_ALPS_TOUCHPAD = (1 << 8),
 	EVDEV_MODEL_SYNAPTICS_SERIAL_TOUCHPAD = (1 << 9),
 	EVDEV_MODEL_JUMPING_SEMI_MT = (1 << 10),
-	EVDEV_MODEL_LOGITECH_K400 = (1 << 11),
+	EVDEV_MODEL_ELANTECH_TOUCHPAD = (1 << 11),
 	EVDEV_MODEL_LENOVO_X220_TOUCHPAD_FW81 = (1 << 12),
-	EVDEV_MODEL_LENOVO_CARBON_X1_6TH = (1 << 13),
+	EVDEV_MODEL_APPLE_INTERNAL_KEYBOARD = (1 << 13),
 	EVDEV_MODEL_CYBORG_RAT = (1 << 14),
+	EVDEV_MODEL_CYAPA = (1 << 15),
 	EVDEV_MODEL_HP_STREAM11_TOUCHPAD = (1 << 16),
 	EVDEV_MODEL_LENOVO_T450_TOUCHPAD= (1 << 17),
 	EVDEV_MODEL_TOUCHPAD_VISIBLE_MARKER = (1 << 18),
@@ -124,48 +124,9 @@ enum evdev_device_model {
 	EVDEV_MODEL_HP_ZBOOK_STUDIO_G3 = (1 << 23),
 	EVDEV_MODEL_HP_PAVILION_DM4_TOUCHPAD = (1 << 24),
 	EVDEV_MODEL_APPLE_TOUCHPAD_ONEBUTTON = (1 << 25),
-	EVDEV_MODEL_LOGITECH_MARBLE_MOUSE = (1 << 26),
-	EVDEV_MODEL_TABLET_NO_PROXIMITY_OUT = (1 << 27),
-	EVDEV_MODEL_MS_NANO_TRANSCEIVER = (1 << 28),
-	EVDEV_MODEL_TABLET_MODE_NO_SUSPEND = (1 << 30),
-};
-
-enum evdev_button_scroll_state {
-	BUTTONSCROLL_IDLE,
-	BUTTONSCROLL_BUTTON_DOWN,	/* button is down */
-	BUTTONSCROLL_READY,		/* ready for scroll events */
-	BUTTONSCROLL_SCROLLING,		/* have sent scroll events */
-};
-
-enum evdev_debounce_state {
-	/**
-	 * Initial state, no debounce but monitoring events
-	 */
-	DEBOUNCE_INIT,
-	/**
-	 * Bounce detected, future events need debouncing
-	 */
-	DEBOUNCE_NEEDED,
-	/**
-	 * Debounce is enabled, but no event is currently being filtered
-	 */
-	DEBOUNCE_ON,
-	/**
-	 * Debounce is enabled and we are currently filtering an event
-	 */
-	DEBOUNCE_ACTIVE,
-};
-
-enum mt_slot_state {
-	SLOT_STATE_NONE,
-	SLOT_STATE_BEGIN,
-	SLOT_STATE_UPDATE,
-	SLOT_STATE_END,
 };
 
 struct mt_slot {
-	bool dirty;
-	enum mt_slot_state state;
 	int32_t seat_slot;
 	struct device_coords point;
 	struct device_coords hysteresis_center;
@@ -188,7 +149,6 @@ struct evdev_device {
 	bool is_mt;
 	bool is_suspended;
 	int dpi; /* HW resolution */
-	int trackpoint_range; /* trackpoint max delta */
 	struct ratelimit syn_drop_limit; /* ratelimit for SYN_DROPPED logging */
 	struct ratelimit nonpointer_rel_limit; /* ratelimit for REL_* events from non-pointer devices */
 	uint32_t model_flags;
@@ -225,7 +185,8 @@ struct evdev_device {
 		uint32_t want_button;
 		/* Checks if buttons are down and commits the setting */
 		void (*change_scroll_method)(struct evdev_device *device);
-		enum evdev_button_scroll_state button_scroll_state;
+		bool button_scroll_active;
+		bool button_scroll_btn_pressed;
 		double threshold;
 		double direction_lock_threshold;
 		uint32_t direction;
@@ -238,8 +199,6 @@ struct evdev_device {
 
 		/* angle per REL_WHEEL click in degrees */
 		struct wheel_angle wheel_click_angle;
-
-		struct wheel_tilt_flags is_tilt;
 	} scroll;
 
 	struct {
@@ -274,12 +233,6 @@ struct evdev_device {
 		uint64_t first_event_time;
 	} middlebutton;
 };
-
-static inline struct evdev_device *
-evdev_device(struct libinput_device *device)
-{
-	return container_of(device, struct evdev_device, base);
-}
 
 #define EVDEV_UNHANDLED_DEVICE ((struct evdev_device *) 1)
 
@@ -323,27 +276,12 @@ struct evdev_dispatch_interface {
 	void (*post_added)(struct evdev_device *device,
 			   struct evdev_dispatch *dispatch);
 
-	/* For touch arbitration, called on the device that should
-	 * enable/disable touch capabilities */
 	void (*toggle_touch)(struct evdev_dispatch *dispatch,
 			     struct evdev_device *device,
 			     bool enable);
-
-	/* Return the state of the given switch */
-	enum libinput_switch_state
-		(*get_switch_state)(struct evdev_dispatch *dispatch,
-				    enum libinput_switch which);
-};
-
-enum evdev_dispatch_type {
-	DISPATCH_FALLBACK,
-	DISPATCH_TOUCHPAD,
-	DISPATCH_TABLET,
-	DISPATCH_TABLET_PAD,
 };
 
 struct evdev_dispatch {
-	enum evdev_dispatch_type dispatch_type;
 	struct evdev_dispatch_interface *interface;
 
 	struct {
@@ -352,13 +290,48 @@ struct evdev_dispatch {
 	} sendevents;
 };
 
-static inline void
-evdev_verify_dispatch_type(struct evdev_dispatch *dispatch,
-			   enum evdev_dispatch_type type)
-{
-	if (dispatch->dispatch_type != type)
-		abort();
-}
+struct fallback_dispatch {
+	struct evdev_dispatch base;
+
+	struct libinput_device_config_calibration calibration;
+
+	struct {
+		bool is_enabled;
+		int angle;
+		struct matrix matrix;
+		struct libinput_device_config_rotation config;
+	} rotation;
+
+	struct {
+		struct device_coords point;
+		int32_t seat_slot;
+
+		struct {
+			struct device_coords min, max;
+			struct ratelimit range_warn_limit;
+		} warning_range;
+	} abs;
+
+	struct {
+		int slot;
+		struct mt_slot *slots;
+		size_t slots_len;
+		bool want_hysteresis;
+		struct device_coords hysteresis_margin;
+	} mt;
+
+	struct device_coords rel;
+
+	/* Bitmask of pressed keys used to ignore initial release events from
+	 * the kernel. */
+	unsigned long hw_key_mask[NLONGS(KEY_CNT)];
+
+	enum evdev_event_type pending_event;
+
+	/* true if we're reading events (i.e. not suspended) but we're
+	   ignoring them */
+	bool ignore_events;
+};
 
 struct evdev_device *
 evdev_device_create(struct libinput_seat *seat,
@@ -379,13 +352,6 @@ evdev_init_calibration(struct evdev_device *device,
 void
 evdev_read_calibration_prop(struct evdev_device *device);
 
-enum switch_reliability
-evdev_read_switch_reliability_prop(struct evdev_device *device);
-
-void
-evdev_init_sendevents(struct evdev_device *device,
-		      struct evdev_dispatch *dispatch);
-
 void
 evdev_device_init_pointer_acceleration(struct evdev_device *device,
 				       struct motion_filter *filter);
@@ -401,18 +367,6 @@ evdev_tablet_create(struct evdev_device *device);
 
 struct evdev_dispatch *
 evdev_tablet_pad_create(struct evdev_device *device);
-
-struct evdev_dispatch *
-evdev_lid_switch_dispatch_create(struct evdev_device *device);
-
-struct evdev_dispatch *
-fallback_dispatch_create(struct libinput_device *libinput_device);
-
-bool
-evdev_is_fake_mt_device(struct evdev_device *device);
-
-int
-evdev_need_mtdev(struct evdev_device *device);
 
 void
 evdev_device_led_update(struct evdev_device *device, enum libinput_led leds);
@@ -461,10 +415,6 @@ int
 evdev_device_has_key(struct evdev_device *device, uint32_t code);
 
 int
-evdev_device_has_switch(struct evdev_device *device,
-			enum libinput_switch sw);
-
-int
 evdev_device_tablet_pad_get_num_buttons(struct evdev_device *device);
 
 int
@@ -480,9 +430,14 @@ struct libinput_tablet_pad_mode_group *
 evdev_device_tablet_pad_get_mode_group(struct evdev_device *device,
 				       unsigned int index);
 
-enum libinput_switch_state
-evdev_device_switch_get_state(struct evdev_device *device,
-			      enum libinput_switch sw);
+unsigned int
+evdev_device_tablet_pad_mode_group_get_button_target(
+				     struct libinput_tablet_pad_mode_group *g,
+				     unsigned int button_index);
+
+struct libinput_tablet_pad_led *
+evdev_device_tablet_pad_get_led(struct evdev_device *device,
+				unsigned int led);
 
 double
 evdev_device_transform_x(struct evdev_device *device,
@@ -518,15 +473,6 @@ evdev_pointer_notify_physical_button(struct evdev_device *device,
 
 void
 evdev_init_natural_scroll(struct evdev_device *device);
-
-void
-evdev_init_button_scroll(struct evdev_device *device,
-			 void (*change_scroll_method)(struct evdev_device *));
-
-int
-evdev_update_key_down_count(struct evdev_device *device,
-			    int code,
-			    int pressed);
 
 void
 evdev_notify_axis(struct evdev_device *device,
@@ -603,11 +549,11 @@ evdev_to_left_handed(struct evdev_device *device,
  * Apply a hysteresis filtering to the coordinate in, based on the current
  * hysteresis center and the margin. If 'in' is within 'margin' of center,
  * return the center (and thus filter the motion). If 'in' is outside,
- * return a point on the edge of the new margin (which is an ellipse, usually
- * a circle). So for a point x in the space outside c + margin we return r:
- * ,---.       ,---.
+ * return a point on the edge of the new margin. So for a point x in the
+ * space outside c + margin we return r:
+ * +---+       +---+
  * | c |  x →  | r x
- * `---'       `---'
+ * +---+       +---+
  *
  * The effect of this is that initial small motions are filtered. Once we
  * move into one direction we lag the real coordinates by 'margin' but any
@@ -620,71 +566,28 @@ evdev_to_left_handed(struct evdev_device *device,
  * Otherwise, the center has a dead zone of size margin around it and the
  * first reachable point is the margin edge.
  *
+ * Hysteresis is handled separately per axis (and the window is thus
+ * rectangular, not circular). It is unkown if that's an issue, but the
+ * calculation to do circular hysteresis are nontrivial, especially since
+ * many touchpads have uneven x/y resolutions.
+ *
  * @param in The input coordinate
  * @param center Current center of the hysteresis
  * @param margin Hysteresis width (on each side)
  *
  * @return The new center of the hysteresis
  */
-static inline struct device_coords
-evdev_hysteresis(const struct device_coords *in,
-		 const struct device_coords *center,
-		 const struct device_coords *margin)
+static inline int
+evdev_hysteresis(int in, int center, int margin)
 {
-	int dx = in->x - center->x;
-	int dy = in->y - center->y;
-	int dx2 = dx * dx;
-	int dy2 = dy * dy;
-	int a = margin->x;
-	int b = margin->y;
-	double normalized_finger_distance, finger_distance, margin_distance;
-	double lag_x, lag_y;
-	struct device_coords result;
+	int diff = in - center;
+	if (abs(diff) <= margin)
+		return center;
 
-	if (!a || !b)
-		return *in;
-
-	/*
-	 * Basic equation for an ellipse of radii a,b:
-	 *   x²/a² + y²/b² = 1
-	 * But we start by making a scaled ellipse passing through the
-	 * relative finger location (dx,dy). So the scale of this ellipse is
-	 * the ratio of finger_distance to margin_distance:
-	 *   dx²/a² + dy²/b² = normalized_finger_distance²
-	 */
-	normalized_finger_distance = sqrt((double)dx2 / (a * a) +
-					  (double)dy2 / (b * b));
-
-	/* Which means anything less than 1 is within the elliptical margin */
-	if (normalized_finger_distance < 1.0)
-		return *center;
-
-	finger_distance = sqrt(dx2 + dy2);
-	margin_distance = finger_distance / normalized_finger_distance;
-
-	/*
-	 * Now calculate the x,y coordinates on the edge of the margin ellipse
-	 * where it intersects the finger vector. Shortcut: We achieve this by
-	 * finding the point with the same gradient as dy/dx.
-	 */
-	if (dx) {
-		double gradient = (double)dy / dx;
-		lag_x = margin_distance / sqrt(gradient * gradient + 1);
-		lag_y = sqrt((margin_distance + lag_x) *
-			     (margin_distance - lag_x));
-	} else {  /* Infinite gradient */
-		lag_x = 0.0;
-		lag_y = margin_distance;
-	}
-
-	/*
-	 * 'result' is the centre of an ellipse (radii a,b) which has been
-	 * dragged by the finger moving inside it to 'in'. The finger is now
-	 * touching the margin ellipse at some point: (±lag_x,±lag_y)
-	 */
-	result.x = (dx >= 0) ? in->x - lag_x : in->x + lag_x;
-	result.y = (dy >= 0) ? in->y - lag_y : in->y + lag_y;
-	return result;
+	if (diff > 0)
+		return in - margin;
+	else
+		return in + margin;
 }
 
 static inline struct libinput *
@@ -692,89 +595,6 @@ evdev_libinput_context(const struct evdev_device *device)
 {
 	return device->base.seat->libinput;
 }
-
-LIBINPUT_ATTRIBUTE_PRINTF(3, 0)
-static inline void
-evdev_log_msg_va(struct evdev_device *device,
-		 enum libinput_log_priority priority,
-		 const char *format,
-		 va_list args)
-{
-	char buf[1024];
-
-	/* Anything info and above is user-visible, use the device name */
-	snprintf(buf,
-		 sizeof(buf),
-		 "%-7s - %s%s%s",
-		 evdev_device_get_sysname(device),
-		 (priority > LIBINPUT_LOG_PRIORITY_DEBUG) ?  device->devname : "",
-		 (priority > LIBINPUT_LOG_PRIORITY_DEBUG) ?  ": " : "",
-		 format);
-
-	log_msg_va(evdev_libinput_context(device), priority, buf, args);
-}
-
-LIBINPUT_ATTRIBUTE_PRINTF(3, 4)
-static inline void
-evdev_log_msg(struct evdev_device *device,
-	      enum libinput_log_priority priority,
-	      const char *format,
-	      ...)
-{
-	va_list args;
-
-	va_start(args, format);
-	evdev_log_msg_va(device, priority, format, args);
-	va_end(args);
-
-}
-
-LIBINPUT_ATTRIBUTE_PRINTF(4, 5)
-static inline void
-evdev_log_msg_ratelimit(struct evdev_device *device,
-			struct ratelimit *ratelimit,
-			enum libinput_log_priority priority,
-			const char *format,
-			...)
-{
-	va_list args;
-	enum ratelimit_state state;
-
-	state = ratelimit_test(ratelimit);
-	if (state == RATELIMIT_EXCEEDED)
-		return;
-
-	va_start(args, format);
-	evdev_log_msg_va(device, priority, format, args);
-	va_end(args);
-
-	if (state == RATELIMIT_THRESHOLD)
-		evdev_log_msg(device,
-			      priority,
-			      "WARNING: log rate limit exceeded (%d msgs per %dms). Discarding future messages.\n",
-			      ratelimit->burst,
-			      us2ms(ratelimit->interval));
-}
-
-#define evdev_log_debug(d_, ...) evdev_log_msg((d_), LIBINPUT_LOG_PRIORITY_DEBUG, __VA_ARGS__)
-#define evdev_log_info(d_, ...) evdev_log_msg((d_), LIBINPUT_LOG_PRIORITY_INFO, __VA_ARGS__)
-#define evdev_log_error(d_, ...) evdev_log_msg((d_), LIBINPUT_LOG_PRIORITY_ERROR, __VA_ARGS__)
-#define evdev_log_bug_kernel(d_, ...) evdev_log_msg((d_), LIBINPUT_LOG_PRIORITY_ERROR, "kernel bug: " __VA_ARGS__)
-#define evdev_log_bug_libinput(d_, ...) evdev_log_msg((d_), LIBINPUT_LOG_PRIORITY_ERROR, "libinput bug: " __VA_ARGS__)
-#define evdev_log_bug_client(d_, ...) evdev_log_msg((d_), LIBINPUT_LOG_PRIORITY_ERROR, "client bug: " __VA_ARGS__)
-
-#define evdev_log_debug_ratelimit(d_, r_, ...) \
-	evdev_log_msg_ratelimit((d_), (r_), LIBINPUT_LOG_PRIORITY_DEBUG, __VA_ARGS__)
-#define evdev_log_info_ratelimit(d_, r_, ...) \
-	evdev_log_msg_ratelimit((d_), (r_), LIBINPUT_LOG_PRIORITY_INFO, __VA_ARGS__)
-#define evdev_log_error_ratelimit(d_, r_, ...) \
-	evdev_log_msg_ratelimit((d_), (r_), LIBINPUT_LOG_PRIORITY_ERROR, __VA_ARGS__)
-#define evdev_log_bug_kernel_ratelimit(d_, r_, ...) \
-	evdev_log_msg_ratelimit((d_), (r_), LIBINPUT_LOG_PRIORITY_ERROR, "kernel bug: " __VA_ARGS__)
-#define evdev_log_bug_libinput_ratelimit(d_, r_, ...) \
-	evdev_log_msg_ratelimit((d_), (r_), LIBINPUT_LOG_PRIORITY_ERROR, "libinput bug: " __VA_ARGS__)
-#define evdev_log_bug_client_ratelimit(d_, r_, ...) \
-	evdev_log_msg_ratelimit((d_), (r_), LIBINPUT_LOG_PRIORITY_ERROR, "client bug: " __VA_ARGS__)
 
 /**
  * Convert the pair of delta coordinates in device space to mm.

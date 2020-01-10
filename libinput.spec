@@ -4,7 +4,7 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.10.7
+Version:        1.6.3
 Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
@@ -18,14 +18,12 @@ Source2:        commitid
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
 
-Patch001:       0001-Revert-Drop-autotools.patch
-Patch002:       0002-Automake-backports.patch
-Patch003:       0003-RHEL-test-add-the-bits-missing-in-check-0.9.9.patch
-Patch004:       0004-RHEL-test-default-to-a-single-job-only-on-RHEL.patch
-Patch005:       0005-test-fix-tests-for-kernels-without-UI_GET_SYSNAME.patch
-Patch006:       0006-test-mark-the-thinkpad-extrabuttons-device-as-ID_INP.patch
-Patch007:       0007-test-fix-the-udev-rule-for-the-HP-WMI-hotkeys-device.patch
-Patch008:       0008-configure.ac-correct-the-version-number.patch
+Patch001: 0001-RHEL-test-add-the-bits-missing-in-check-0.9.9.patch
+Patch002: 0002-RHEL-test-default-to-a-single-job-only-on-RHEL.patch
+Patch003: 0003-RHEL-test-fix-tests-for-kernels-without-UI_GET_SYSNA.patch
+Patch004: 0004-test-don-t-use-the-same-mouse-twice.patch
+Patch005: 0005-test-fix-tablet-touch-arbitration-case.patch
+Patch006: 0006-test-add-missing-linebreak-to-error-message.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -69,11 +67,7 @@ git am -p1 %{patches} < /dev/null
 
 %build
 autoreconf -v --install --force || exit 1
-%configure --disable-static --disable-silent-rules \
-        --with-udev-dir=%{udevdir} \
-        --disable-documentation \
-        --disable-debug-gui \
-        --disable-tests
+%configure --disable-static --disable-silent-rules --with-udev-dir=%{udevdir}
 make %{?_smp_mflags}
 
 
@@ -81,15 +75,6 @@ make %{?_smp_mflags}
 %make_install
 find $RPM_BUILD_ROOT -name '*.la' -delete
 
-# python3-evdev required but not available on RHEL7
-rm $RPM_BUILD_ROOT/%{_libexecdir}/libinput/libinput-measure-touchpad-tap
-rm $RPM_BUILD_ROOT/%{_libexecdir}/libinput/libinput-measure-touchpad-pressure
-rm $RPM_BUILD_ROOT/%{_libexecdir}/libinput/libinput-measure-touch-size
-rm $RPM_BUILD_ROOT/%{_libexecdir}/libinput/libinput-measure-trackpoint-range
-rm $RPM_BUILD_ROOT/%{_mandir}/man1/libinput-measure-touchpad-tap.1*
-rm $RPM_BUILD_ROOT/%{_mandir}/man1/libinput-measure-touch-size.1*
-rm $RPM_BUILD_ROOT/%{_mandir}/man1/libinput-measure-touchpad-pressure.1*
-rm $RPM_BUILD_ROOT/%{_mandir}/man1/libinput-measure-trackpoint-range.1*
 
 %post
 /sbin/ldconfig
@@ -106,54 +91,18 @@ rm $RPM_BUILD_ROOT/%{_mandir}/man1/libinput-measure-trackpoint-range.1*
 %{udevdir}/rules.d/80-libinput-device-groups.rules
 %{udevdir}/rules.d/90-libinput-model-quirks.rules
 %{udevdir}/hwdb.d/90-libinput-model-quirks.hwdb
-%{_bindir}/libinput
-%dir %{_libexecdir}/libinput/
-%{_libexecdir}/libinput/libinput-debug-events
-%{_libexecdir}/libinput/libinput-list-devices
-%{_libexecdir}/libinput/libinput-measure
-%{_mandir}/man1/libinput.1*
-%{_mandir}/man1/libinput-measure.1*
-%{_mandir}/man1/libinput-list-devices.1*
-%{_mandir}/man1/libinput-debug-events.1*
 %{_bindir}/libinput-list-devices
 %{_bindir}/libinput-debug-events
+%{_mandir}/man1/libinput-list-devices.1*
+%{_mandir}/man1/libinput-debug-events.1*
 
 %files devel
 %{_includedir}/libinput.h
 %{_libdir}/libinput.so
 %{_libdir}/pkgconfig/libinput.pc
 
+
 %changelog
-* Mon May 21 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.10.7-2
-- Correct the automake version number to 1.10.7 (#1564642)
-
-* Thu May 17 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.10.7-1
-- libinput 1.10.7 (#1564642)
-
-* Mon Oct 30 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.8.4-2
-- Upload missing source tarball
-
-* Mon Oct 30 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.8.4-1
-- libinput 1.8.4 (#1496663)
-
-* Mon Oct 09 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.8.3-2
-- spec file bump
-
-* Mon Oct 09 2017 Peter Hutterer <peter.hutterer@redhat.com>
-- Restore 644 permissions for a source file to fix rpmdiff
-
-* Mon Oct 09 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.8.3-1
-- libinput 1.8.3 (#1496663)
-
-* Tue Sep 26 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.6.3-3
-- Fix touchpad tap timestamps (#1491525)
-- Fix missing show-keycodes entry in man page (#1491532)
-- Change palm detection thresholds (#1491537)
-- Ignore tap motion threshold for nfingers > nslots (#1491533)
-- Fix a memory leak on destroy
-- Ignore hovering touches while tapping
-- Fix a man page typo
-
 * Tue Mar 14 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.6.3-2
 - Fix test suite to build on RHEL 7.x (#1431640)
 

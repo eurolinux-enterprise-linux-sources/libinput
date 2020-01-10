@@ -29,7 +29,6 @@
 #include <libinput.h>
 #include <libinput-util.h>
 #include <unistd.h>
-#include <stdarg.h>
 
 #include "litest.h"
 #include "libinput-util.h"
@@ -106,7 +105,6 @@ START_TEST(event_conversion_device_notify)
 					   EV_KEY, BTN_LEFT,
 					   -1, -1);
 	li = libinput_path_create_context(&simple_interface, NULL);
-	litest_restore_log_handler(li); /* use the default litest handler */
 	libinput_path_add_device(li, libevdev_uinput_get_devnode(uinput));
 
 	libinput_dispatch(li);
@@ -137,7 +135,6 @@ START_TEST(event_conversion_device_notify)
 			ck_assert(libinput_event_get_gesture_event(event) == NULL);
 			ck_assert(libinput_event_get_tablet_tool_event(event) == NULL);
 			ck_assert(libinput_event_get_tablet_pad_event(event) == NULL);
-			ck_assert(libinput_event_get_switch_event(event) == NULL);
 			litest_restore_log_handler(li);
 		}
 
@@ -195,7 +192,6 @@ START_TEST(event_conversion_pointer)
 			ck_assert(libinput_event_get_gesture_event(event) == NULL);
 			ck_assert(libinput_event_get_tablet_tool_event(event) == NULL);
 			ck_assert(libinput_event_get_tablet_pad_event(event) == NULL);
-			ck_assert(libinput_event_get_switch_event(event) == NULL);
 			litest_restore_log_handler(li);
 		}
 		libinput_event_destroy(event);
@@ -247,7 +243,6 @@ START_TEST(event_conversion_pointer_abs)
 			ck_assert(libinput_event_get_gesture_event(event) == NULL);
 			ck_assert(libinput_event_get_tablet_tool_event(event) == NULL);
 			ck_assert(libinput_event_get_tablet_pad_event(event) == NULL);
-			ck_assert(libinput_event_get_switch_event(event) == NULL);
 			litest_restore_log_handler(li);
 		}
 		libinput_event_destroy(event);
@@ -292,7 +287,6 @@ START_TEST(event_conversion_key)
 			ck_assert(libinput_event_get_gesture_event(event) == NULL);
 			ck_assert(libinput_event_get_tablet_tool_event(event) == NULL);
 			ck_assert(libinput_event_get_tablet_pad_event(event) == NULL);
-			ck_assert(libinput_event_get_switch_event(event) == NULL);
 			litest_restore_log_handler(li);
 		}
 		libinput_event_destroy(event);
@@ -344,7 +338,6 @@ START_TEST(event_conversion_touch)
 			ck_assert(libinput_event_get_gesture_event(event) == NULL);
 			ck_assert(libinput_event_get_tablet_tool_event(event) == NULL);
 			ck_assert(libinput_event_get_tablet_pad_event(event) == NULL);
-			ck_assert(libinput_event_get_switch_event(event) == NULL);
 			litest_restore_log_handler(li);
 		}
 		libinput_event_destroy(event);
@@ -394,7 +387,6 @@ START_TEST(event_conversion_gesture)
 			ck_assert(libinput_event_get_keyboard_event(event) == NULL);
 			ck_assert(libinput_event_get_touch_event(event) == NULL);
 			ck_assert(libinput_event_get_tablet_pad_event(event) == NULL);
-			ck_assert(libinput_event_get_switch_event(event) == NULL);
 			litest_restore_log_handler(li);
 		}
 		libinput_event_destroy(event);
@@ -442,7 +434,6 @@ START_TEST(event_conversion_tablet)
 			ck_assert(libinput_event_get_keyboard_event(event) == NULL);
 			ck_assert(libinput_event_get_touch_event(event) == NULL);
 			ck_assert(libinput_event_get_tablet_pad_event(event) == NULL);
-			ck_assert(libinput_event_get_switch_event(event) == NULL);
 			litest_restore_log_handler(li);
 		}
 		libinput_event_destroy(event);
@@ -486,58 +477,12 @@ START_TEST(event_conversion_tablet_pad)
 			ck_assert(libinput_event_get_keyboard_event(event) == NULL);
 			ck_assert(libinput_event_get_touch_event(event) == NULL);
 			ck_assert(libinput_event_get_tablet_tool_event(event) == NULL);
-			ck_assert(libinput_event_get_switch_event(event) == NULL);
 			litest_restore_log_handler(li);
 		}
 		libinput_event_destroy(event);
 	}
 
 	ck_assert_int_gt(events, 0);
-}
-END_TEST
-
-START_TEST(event_conversion_switch)
-{
-	struct litest_device *dev = litest_current_device();
-	struct libinput *li = dev->libinput;
-	struct libinput_event *event;
-	int sw = 0;
-
-	litest_switch_action(dev,
-			     LIBINPUT_SWITCH_LID,
-			     LIBINPUT_SWITCH_STATE_ON);
-	litest_switch_action(dev,
-			     LIBINPUT_SWITCH_LID,
-			     LIBINPUT_SWITCH_STATE_OFF);
-	libinput_dispatch(li);
-
-	while ((event = libinput_get_event(li))) {
-		enum libinput_event_type type;
-		type = libinput_event_get_type(event);
-
-		if (type == LIBINPUT_EVENT_SWITCH_TOGGLE) {
-			struct libinput_event_switch *s;
-			struct libinput_event *base;
-			s = libinput_event_get_switch_event(event);
-			base = libinput_event_switch_get_base_event(s);
-			ck_assert(event == base);
-
-			sw++;
-
-			litest_disable_log_handler(li);
-			ck_assert(libinput_event_get_device_notify_event(event) == NULL);
-			ck_assert(libinput_event_get_keyboard_event(event) == NULL);
-			ck_assert(libinput_event_get_pointer_event(event) == NULL);
-			ck_assert(libinput_event_get_touch_event(event) == NULL);
-			ck_assert(libinput_event_get_gesture_event(event) == NULL);
-			ck_assert(libinput_event_get_tablet_tool_event(event) == NULL);
-			ck_assert(libinput_event_get_tablet_pad_event(event) == NULL);
-			litest_restore_log_handler(li);
-		}
-		libinput_event_destroy(event);
-	}
-
-	ck_assert_int_gt(sw, 0);
 }
 END_TEST
 
@@ -773,9 +718,6 @@ START_TEST(dpi_parser)
 		dpi = parse_mouse_dpi_property(tests[i].tag);
 		ck_assert_int_eq(dpi, tests[i].expected_value);
 	}
-
-	dpi = parse_mouse_dpi_property(NULL);
-	ck_assert_int_eq(dpi, 0);
 }
 END_TEST
 
@@ -830,9 +772,6 @@ START_TEST(wheel_click_count_parser)
 		angle = parse_mouse_wheel_click_count_property(tests[i].tag);
 		ck_assert_int_eq(angle, tests[i].expected_value);
 	}
-
-	angle = parse_mouse_wheel_click_count_property(NULL);
-	ck_assert_int_eq(angle, 0);
 }
 END_TEST
 
@@ -859,9 +798,6 @@ START_TEST(trackpoint_accel_parser)
 		accel = parse_trackpoint_accel_property(tests[i].tag);
 		ck_assert(accel == tests[i].expected_value);
 	}
-
-	accel = parse_trackpoint_accel_property(NULL);
-	ck_assert_double_eq(accel, 0.0);
 }
 END_TEST
 
@@ -908,171 +844,6 @@ START_TEST(dimension_prop_parser)
 			ck_assert_int_eq(y, 0xad);
 		}
 	}
-
-	success = parse_dimension_property(NULL, &x, &y);
-	ck_assert(success == false);
-}
-END_TEST
-
-struct parser_test_reliability {
-	char *tag;
-	bool success;
-	enum switch_reliability reliability;
-};
-
-START_TEST(reliability_prop_parser)
-{
-	struct parser_test_reliability tests[] = {
-		{ "reliable", true, RELIABILITY_RELIABLE },
-		{ "unreliable", false, 0 },
-		{ "", false, 0 },
-		{ "0", false, 0 },
-		{ "1", false, 0 },
-		{ NULL, false, 0, }
-	};
-	enum switch_reliability r;
-	bool success;
-	int i;
-
-	for (i = 0; tests[i].tag != NULL; i++) {
-		r = 0xaf;
-		success = parse_switch_reliability_property(tests[i].tag, &r);
-		ck_assert(success == tests[i].success);
-		if (success)
-			ck_assert_int_eq(r, tests[i].reliability);
-		else
-			ck_assert_int_eq(r, 0xaf);
-	}
-
-	success = parse_switch_reliability_property(NULL, &r);
-	ck_assert(success == true);
-	ck_assert_int_eq(r, RELIABILITY_UNKNOWN);
-
-	success = parse_switch_reliability_property("foo", NULL);
-	ck_assert(success == false);
-}
-END_TEST
-
-struct parser_test_calibration {
-	char *prop;
-	bool success;
-	float values[6];
-};
-
-START_TEST(calibration_prop_parser)
-{
-#define DEFAULT_VALUES { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0 }
-	const float untouched[6] = DEFAULT_VALUES;
-	struct parser_test_calibration tests[] = {
-		{ "", false, DEFAULT_VALUES },
-		{ "banana", false, DEFAULT_VALUES },
-		{ "1 2 3 a 5 6", false, DEFAULT_VALUES },
-		{ "2", false, DEFAULT_VALUES },
-		{ "2 3 4 5 6", false, DEFAULT_VALUES },
-		{ "1 2 3 4 5 6", true, DEFAULT_VALUES },
-		{ "6.00012 3.244 4.238 5.2421 6.0134 8.860", true,
-			{ 6.00012, 3.244, 4.238, 5.2421, 6.0134, 8.860 }},
-		{ "0xff 2 3 4 5 6", true,
-			{ 255, 2, 3, 4, 5, 6 }},
-		{ NULL, false, DEFAULT_VALUES }
-	};
-	bool success;
-	float calibration[6];
-	int rc;
-	int i;
-
-	for (i = 0; tests[i].prop != NULL; i++) {
-		memcpy(calibration, untouched, sizeof(calibration));
-
-		success = parse_calibration_property(tests[i].prop,
-						     calibration);
-		ck_assert_int_eq(success, tests[i].success);
-		if (success)
-			rc = memcmp(tests[i].values,
-				    calibration,
-				    sizeof(calibration));
-		else
-			rc = memcmp(untouched,
-				    calibration,
-				    sizeof(calibration));
-		ck_assert_int_eq(rc, 0);
-	}
-
-	memcpy(calibration, untouched, sizeof(calibration));
-
-	success = parse_calibration_property(NULL, calibration);
-	ck_assert(success == false);
-	rc = memcmp(untouched, calibration, sizeof(calibration));
-	ck_assert_int_eq(rc, 0);
-}
-END_TEST
-
-struct parser_test_range {
-	char *tag;
-	bool success;
-	int hi, lo;
-};
-
-START_TEST(range_prop_parser)
-{
-	struct parser_test_range tests[] = {
-		{ "10:8", true, 10, 8 },
-		{ "100:-1", true, 100, -1 },
-		{ "-203813:-502023", true, -203813, -502023 },
-		{ "238492:28210", true, 238492, 28210 },
-		{ "none", true, 0, 0 },
-		{ "0:0", false, 0, 0 },
-		{ "", false, 0, 0 },
-		{ "abcd", false, 0, 0 },
-		{ "10:30:10", false, 0, 0 },
-		{ NULL, false, 0, 0 }
-	};
-	int i;
-	int hi, lo;
-	bool success;
-
-	for (i = 0; tests[i].tag != NULL; i++) {
-		hi = lo = 0xad;
-		success = parse_range_property(tests[i].tag, &hi, &lo);
-		ck_assert(success == tests[i].success);
-		if (success) {
-			ck_assert_int_eq(hi, tests[i].hi);
-			ck_assert_int_eq(lo, tests[i].lo);
-		} else {
-			ck_assert_int_eq(hi, 0xad);
-			ck_assert_int_eq(lo, 0xad);
-		}
-	}
-
-	success = parse_range_property(NULL, NULL, NULL);
-	ck_assert(success == false);
-}
-END_TEST
-
-START_TEST(palm_pressure_parser)
-{
-	struct parser_test tests[] = {
-		{ "1", 1 },
-		{ "10", 10 },
-		{ "255", 255 },
-		{ "360", 360 },
-
-		{ "-12", 0 },
-		{ "0", 0 },
-		{ "-0", 0 },
-		{ "a", 0 },
-		{ "10a", 0 },
-		{ "10-", 0 },
-		{ "sadfasfd", 0 },
-		{ NULL, 0 }
-	};
-
-	int i, angle;
-
-	for (i = 0; tests[i].tag != NULL; i++) {
-		angle = parse_palm_pressure_property(tests[i].tag);
-		ck_assert_int_eq(angle, tests[i].expected_value);
-	}
 }
 END_TEST
 
@@ -1118,77 +889,6 @@ START_TEST(safe_atoi_test)
 	for (int i = 0; tests[i].str != NULL; i++) {
 		v = 0xad;
 		success = safe_atoi(tests[i].str, &v);
-		ck_assert(success == tests[i].success);
-		if (success)
-			ck_assert_int_eq(v, tests[i].val);
-		else
-			ck_assert_int_eq(v, 0xad);
-	}
-}
-END_TEST
-
-START_TEST(safe_atoi_base_16_test)
-{
-	struct atoi_test tests[] = {
-		{ "10", true, 0x10 },
-		{ "20", true, 0x20 },
-		{ "-1", true, -1 },
-		{ "0x10", true, 0x10 },
-		{ "0xff", true, 0xff },
-		{ "abc", true, 0xabc },
-		{ "-10", true, -0x10 },
-		{ "0x0", true, 0 },
-		{ "0", true, 0 },
-		{ "0x-99", false, 0 },
-		{ "0xak", false, 0 },
-		{ "0x", false, 0 },
-		{ "x10", false, 0 },
-		{ NULL, false, 0 }
-	};
-
-	int v;
-	bool success;
-
-	for (int i = 0; tests[i].str != NULL; i++) {
-		v = 0xad;
-		success = safe_atoi_base(tests[i].str, &v, 16);
-		ck_assert(success == tests[i].success);
-		if (success)
-			ck_assert_int_eq(v, tests[i].val);
-		else
-			ck_assert_int_eq(v, 0xad);
-	}
-}
-END_TEST
-
-START_TEST(safe_atoi_base_8_test)
-{
-	struct atoi_test tests[] = {
-		{ "7", true, 07 },
-		{ "10", true, 010 },
-		{ "20", true, 020 },
-		{ "-1", true, -1 },
-		{ "010", true, 010 },
-		{ "0ff", false, 0 },
-		{ "abc", false, 0},
-		{ "0xabc", false, 0},
-		{ "-10", true, -010 },
-		{ "0", true, 0 },
-		{ "00", true, 0 },
-		{ "0x0", false, 0 },
-		{ "0x-99", false, 0 },
-		{ "0xak", false, 0 },
-		{ "0x", false, 0 },
-		{ "x10", false, 0 },
-		{ NULL, false, 0 }
-	};
-
-	int v;
-	bool success;
-
-	for (int i = 0; tests[i].str != NULL; i++) {
-		v = 0xad;
-		success = safe_atoi_base(tests[i].str, &v, 8);
 		ck_assert(success == tests[i].success);
 		if (success)
 			ck_assert_int_eq(v, tests[i].val);
@@ -1306,6 +1006,16 @@ const struct libinput_interface leak_interface = {
 	.close_restricted = close_restricted_leak,
 };
 
+LIBINPUT_ATTRIBUTE_PRINTF(3, 0)
+static void
+simple_log_handler(struct libinput *libinput,
+		   enum libinput_log_priority priority,
+		   const char *format,
+		   va_list args)
+{
+	vfprintf(stderr, format, args);
+}
+
 START_TEST(fd_no_event_leak)
 {
 	struct libevdev_uinput *uinput;
@@ -1328,7 +1038,8 @@ START_TEST(fd_no_event_leak)
 	ck_assert_int_gt(fd, -1);
 
 	li = libinput_path_create_context(&leak_interface, &fd);
-	litest_restore_log_handler(li); /* use the default litest handler */
+	libinput_log_set_priority(li, LIBINPUT_LOG_PRIORITY_DEBUG);
+	libinput_log_set_handler(li, simple_log_handler);
 
 	/* Add the device, trigger an event, then remove it again.
 	 * Without it, we get a SYN_DROPPED immediately and no events.
@@ -1383,114 +1094,6 @@ START_TEST(library_version)
 }
 END_TEST
 
-static void timer_offset_warning(struct libinput *libinput,
-				 enum libinput_log_priority priority,
-				 const char *format,
-				 va_list args)
-{
-	int *warning_triggered = (int*)libinput_get_user_data(libinput);
-
-	if (priority == LIBINPUT_LOG_PRIORITY_ERROR &&
-	    strstr(format, "offset negative"))
-		(*warning_triggered)++;
-}
-
-START_TEST(timer_offset_bug_warning)
-{
-	struct litest_device *dev = litest_current_device();
-	struct libinput *li = dev->libinput;
-	int warning_triggered = 0;
-
-	litest_enable_tap(dev->libinput_device);
-	litest_drain_events(li);
-
-	litest_touch_down(dev, 0, 50, 50);
-	litest_touch_up(dev, 0);
-
-	litest_timeout_tap();
-
-	libinput_set_user_data(li, &warning_triggered);
-	libinput_log_set_handler(li, timer_offset_warning);
-	libinput_dispatch(li);
-
-	/* triggered for touch down and touch up */
-	ck_assert_int_eq(warning_triggered, 2);
-	litest_restore_log_handler(li);
-}
-END_TEST
-
-START_TEST(timer_flush)
-{
-	struct libinput *li;
-	struct litest_device *keyboard, *touchpad;
-
-	li = litest_create_context();
-
-	touchpad = litest_add_device(li, LITEST_SYNAPTICS_TOUCHPAD);
-	litest_enable_tap(touchpad->libinput_device);
-	libinput_dispatch(li);
-	keyboard = litest_add_device(li, LITEST_KEYBOARD);
-	libinput_dispatch(li);
-	litest_drain_events(li);
-
-	/* make sure tapping works */
-	litest_touch_down(touchpad, 0, 50, 50);
-	litest_touch_up(touchpad, 0);
-	libinput_dispatch(li);
-	litest_timeout_tap();
-	libinput_dispatch(li);
-
-	litest_assert_button_event(li, BTN_LEFT,
-				   LIBINPUT_BUTTON_STATE_PRESSED);
-	litest_assert_button_event(li, BTN_LEFT,
-				   LIBINPUT_BUTTON_STATE_RELEASED);
-	litest_assert_empty_queue(li);
-
-	/* make sure dwt-tap is ignored */
-	litest_keyboard_key(keyboard, KEY_A, true);
-	litest_keyboard_key(keyboard, KEY_A, false);
-	libinput_dispatch(li);
-	litest_touch_down(touchpad, 0, 50, 50);
-	litest_touch_up(touchpad, 0);
-	libinput_dispatch(li);
-	litest_timeout_tap();
-	libinput_dispatch(li);
-	litest_assert_only_typed_events(li, LIBINPUT_EVENT_KEYBOARD_KEY);
-
-	/* Ingore 'timer offset negative' warnings */
-	litest_disable_log_handler(li);
-
-	/* now mess with the timing
-	   - send a key event
-	   - expire dwt
-	   - send a tap
-	   and then call libinput_dispatch(). libinput should notice that
-	   the tap event came in after the timeout and thus acknowledge the
-	   tap.
-	 */
-	litest_keyboard_key(keyboard, KEY_A, true);
-	litest_keyboard_key(keyboard, KEY_A, false);
-	litest_timeout_dwt_long();
-	litest_touch_down(touchpad, 0, 50, 50);
-	litest_touch_up(touchpad, 0);
-	libinput_dispatch(li);
-	litest_timeout_tap();
-	libinput_dispatch(li);
-	litest_restore_log_handler(li);
-
-	litest_assert_key_event(li, KEY_A, LIBINPUT_KEY_STATE_PRESSED);
-	litest_assert_key_event(li, KEY_A, LIBINPUT_KEY_STATE_RELEASED);
-	litest_assert_button_event(li, BTN_LEFT,
-				   LIBINPUT_BUTTON_STATE_PRESSED);
-	litest_assert_button_event(li, BTN_LEFT,
-				   LIBINPUT_BUTTON_STATE_RELEASED);
-
-	litest_delete_device(keyboard);
-	litest_delete_device(touchpad);
-	libinput_unref(li);
-}
-END_TEST
-
 void
 litest_setup_tests_misc(void)
 {
@@ -1503,14 +1106,10 @@ litest_setup_tests_misc(void)
 	litest_add_for_device("events:conversion", event_conversion_gesture, LITEST_BCM5974);
 	litest_add_for_device("events:conversion", event_conversion_tablet, LITEST_WACOM_CINTIQ);
 	litest_add_for_device("events:conversion", event_conversion_tablet_pad, LITEST_WACOM_INTUOS5_PAD);
-	litest_add_for_device("events:conversion", event_conversion_switch, LITEST_LID_SWITCH);
 	litest_add_no_device("misc:bitfield_helpers", bitfield_helpers);
 
 	litest_add_no_device("context:refcount", context_ref_counting);
 	litest_add_no_device("config:status string", config_status_string);
-
-	litest_add_for_device("timer:offset-warning", timer_offset_bug_warning, LITEST_SYNAPTICS_TOUCHPAD);
-	litest_add_no_device("timer:flush", timer_flush);
 
 	litest_add_no_device("misc:matrix", matrix_helpers);
 	litest_add_no_device("misc:ratelimit", ratelimit_helpers);
@@ -1519,13 +1118,7 @@ litest_setup_tests_misc(void)
 	litest_add_no_device("misc:parser", wheel_click_count_parser);
 	litest_add_no_device("misc:parser", trackpoint_accel_parser);
 	litest_add_no_device("misc:parser", dimension_prop_parser);
-	litest_add_no_device("misc:parser", reliability_prop_parser);
-	litest_add_no_device("misc:parser", calibration_prop_parser);
-	litest_add_no_device("misc:parser", range_prop_parser);
-	litest_add_no_device("misc:parser", palm_pressure_parser);
 	litest_add_no_device("misc:parser", safe_atoi_test);
-	litest_add_no_device("misc:parser", safe_atoi_base_16_test);
-	litest_add_no_device("misc:parser", safe_atoi_base_8_test);
 	litest_add_no_device("misc:parser", safe_atod_test);
 	litest_add_no_device("misc:parser", strsplit_test);
 	litest_add_no_device("misc:time", time_conversion);

@@ -59,6 +59,9 @@ pad_mode_toggle_button_new(struct pad_dispatch *pad,
 	struct pad_mode_toggle_button *button;
 
 	button = zalloc(sizeof *button);
+	if (!button)
+		return NULL;
+
 	button->button_index = button_index;
 
 	return button;
@@ -118,6 +121,9 @@ pad_led_new(struct libinput *libinput, const char *prefix, int group, int mode)
 	int rc, fd;
 
 	led = zalloc(sizeof *led);
+	if (!led)
+		return NULL;
+
 	led->brightness_fd = -1;
 	led->mode_idx = mode;
 	list_init(&led->link);
@@ -172,6 +178,9 @@ pad_group_new_basic(struct pad_dispatch *pad,
 	struct pad_led_group *group;
 
 	group = zalloc(sizeof *group);
+	if (!group)
+		return NULL;
+
 	group->base.device = &pad->device->base;
 	group->base.refcount = 1;
 	group->base.index = group_index;
@@ -227,9 +236,10 @@ pad_group_new(struct pad_dispatch *pad,
 
 error:
 	if (!is_litest_device(pad->device))
-		evdev_log_error(pad->device,
-				"unable to init LED group: %s\n",
-				strerror(errno));
+		log_error(libinput,
+			  "%s: unable to init LED group: %s\n",
+			  pad->device->devname,
+			  strerror(errno));
 	pad_led_group_destroy(&group->base);
 
 	return NULL;
@@ -276,6 +286,7 @@ pad_init_led_groups(struct pad_dispatch *pad,
 		    struct evdev_device *device,
 		    WacomDevice *wacom)
 {
+	struct libinput *libinput = device->base.seat->libinput;
 	const WacomStatusLEDs *leds;
 	int nleds, nmodes;
 	int i;
@@ -294,9 +305,9 @@ pad_init_led_groups(struct pad_dispatch *pad,
 	for (i = 0; i < nleds; i++) {
 		switch(leds[i]) {
 		case WACOM_STATUS_LED_UNAVAILABLE:
-			evdev_log_bug_libinput(device,
-					       "Invalid led type %d\n",
-					       leds[i]);
+			log_bug_libinput(libinput,
+					 "Invalid led type %d\n",
+					 leds[i]);
 			return 1;
 		case WACOM_STATUS_LED_RING:
 			nmodes = libwacom_get_ring_num_modes(wacom);
@@ -378,6 +389,7 @@ static int
 pad_init_mode_buttons(struct pad_dispatch *pad,
 		      WacomDevice *wacom)
 {
+	struct libinput *libinput = pad_libinput_context(pad);
 	struct libinput_tablet_pad_mode_group *group;
 	unsigned int group_idx;
 	int i;
@@ -398,17 +410,19 @@ pad_init_mode_buttons(struct pad_dispatch *pad,
 		}
 
 		if ((int)group_idx == -1) {
-			evdev_log_bug_libinput(pad->device,
-					       "unhandled position for button %i\n",
-					       i);
+			log_bug_libinput(libinput,
+					 "%s: unhandled position for button %i\n",
+					 pad->device->devname,
+					 i);
 			return 1;
 		}
 
 		group = pad_get_mode_group(pad, group_idx);
 		if (!group) {
-			evdev_log_bug_libinput(pad->device,
-					       "Failed to find group %d for button %i\n",
-					       group_idx,
+			log_bug_libinput(libinput,
+					 "%s: Failed to find group %d for button %i\n",
+					 pad->device->devname,
+					 group_idx,
 					 i);
 			return 1;
 		}
@@ -489,14 +503,15 @@ static int
 pad_init_leds_from_libwacom(struct pad_dispatch *pad,
 			    struct evdev_device *device)
 {
+	struct libinput *libinput = device->base.seat->libinput;
 	WacomDeviceDatabase *db = NULL;
 	WacomDevice *wacom = NULL;
 	int rc = 1;
 
 	db = libwacom_database_new();
 	if (!db) {
-		evdev_log_info(device,
-			       "Failed to initialize libwacom context.\n");
+		log_info(libinput,
+			 "Failed to initialize libwacom context.\n");
 		goto out;
 	}
 
@@ -561,9 +576,9 @@ pad_init_leds(struct pad_dispatch *pad,
 	list_init(&pad->modes.mode_group_list);
 
 	if (pad->nbuttons > 32) {
-		evdev_log_bug_libinput(pad->device,
-				       "Too many pad buttons for modes %d\n",
-				       pad->nbuttons);
+		log_bug_libinput(device->base.seat->libinput,
+				 "Too many pad buttons for modes %d\n",
+				 pad->nbuttons);
 		return rc;
 	}
 

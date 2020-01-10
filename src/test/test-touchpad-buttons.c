@@ -97,7 +97,7 @@ START_TEST(touchpad_click_defaults_none)
 	    libevdev_get_id_product(dev->evdev) == PRODUCT_ID_APPLE_APPLETOUCH)
 		return;
 
-	/* call this test for non-clickpads and non-touchpads */
+	/* call this test for non-clickpads */
 
 	methods = libinput_device_config_click_get_methods(device);
 	ck_assert_int_eq(methods, 0);
@@ -1591,60 +1591,26 @@ START_TEST(clickpad_topsoftbuttons_middle)
 }
 END_TEST
 
-START_TEST(clickpad_topsoftbuttons_move_out_leftclick_before_timeout)
+START_TEST(clickpad_topsoftbuttons_move_out_ignore)
 {
 	struct litest_device *dev = litest_current_device();
 	struct libinput *li = dev->libinput;
 
-	/* Finger down in top right button area, wait past enter timeout
+	/* Finger down in top button area, wait past enter timeout
 	   Move into main area, wait past leave timeout
 	   Click
-	     -> expect left click
+	     -> expect no events
 	 */
 
 	litest_drain_events(li);
 
-	litest_touch_down(dev, 0, 80, 5);
+	litest_touch_down(dev, 0, 50, 5);
 	libinput_dispatch(li);
 	litest_timeout_softbuttons();
 	libinput_dispatch(li);
 	litest_assert_empty_queue(li);
 
-	litest_touch_move_to(dev, 0, 80, 5, 80, 90, 20, 0);
-	libinput_dispatch(li);
-
-	litest_event(dev, EV_KEY, BTN_LEFT, 1);
-	litest_event(dev, EV_SYN, SYN_REPORT, 0);
-	litest_event(dev, EV_KEY, BTN_LEFT, 0);
-	litest_event(dev, EV_SYN, SYN_REPORT, 0);
-
-	litest_touch_up(dev, 0);
-
-	litest_assert_button_event(li, BTN_RIGHT, LIBINPUT_BUTTON_STATE_PRESSED);
-	litest_assert_button_event(li, BTN_RIGHT, LIBINPUT_BUTTON_STATE_RELEASED);
-}
-END_TEST
-
-START_TEST(clickpad_topsoftbuttons_move_out_leftclick)
-{
-	struct litest_device *dev = litest_current_device();
-	struct libinput *li = dev->libinput;
-
-	/* Finger down in top right button area, wait past enter timeout
-	   Move into main area, wait past leave timeout
-	   Click
-	     -> expect left click
-	 */
-
-	litest_drain_events(li);
-
-	litest_touch_down(dev, 0, 80, 5);
-	libinput_dispatch(li);
-	litest_timeout_softbuttons();
-	libinput_dispatch(li);
-	litest_assert_empty_queue(li);
-
-	litest_touch_move_to(dev, 0, 80, 5, 80, 90, 20, 0);
+	litest_touch_move_to(dev, 0, 50, 5, 80, 90, 20, 0);
 	libinput_dispatch(li);
 	litest_timeout_softbuttons();
 	libinput_dispatch(li);
@@ -1656,8 +1622,7 @@ START_TEST(clickpad_topsoftbuttons_move_out_leftclick)
 
 	litest_touch_up(dev, 0);
 
-	litest_assert_button_event(li, BTN_LEFT, LIBINPUT_BUTTON_STATE_PRESSED);
-	litest_assert_button_event(li, BTN_LEFT, LIBINPUT_BUTTON_STATE_RELEASED);
+	litest_assert_empty_queue(li);
 }
 END_TEST
 
@@ -2012,7 +1977,6 @@ litest_setup_tests_touchpad_buttons(void)
 	litest_add("touchpad:click", touchpad_click_defaults_clickfinger, LITEST_APPLE_CLICKPAD, LITEST_ANY);
 	litest_add("touchpad:click", touchpad_click_defaults_btnarea, LITEST_CLICKPAD, LITEST_APPLE_CLICKPAD);
 	litest_add("touchpad:click", touchpad_click_defaults_none, LITEST_TOUCHPAD, LITEST_CLICKPAD);
-	litest_add("touchpad:click", touchpad_click_defaults_none, LITEST_ANY, LITEST_TOUCHPAD);
 
 	litest_add("touchpad:click", touchpad_btn_left, LITEST_TOUCHPAD|LITEST_BUTTON, LITEST_CLICKPAD);
 	litest_add("touchpad:click", clickpad_btn_left, LITEST_CLICKPAD, LITEST_ANY);
@@ -2033,8 +1997,7 @@ litest_setup_tests_touchpad_buttons(void)
 	litest_add("touchpad:topsoftbuttons", clickpad_topsoftbuttons_left, LITEST_TOPBUTTONPAD, LITEST_ANY);
 	litest_add("touchpad:topsoftbuttons", clickpad_topsoftbuttons_right, LITEST_TOPBUTTONPAD, LITEST_ANY);
 	litest_add("touchpad:topsoftbuttons", clickpad_topsoftbuttons_middle, LITEST_TOPBUTTONPAD, LITEST_ANY);
-	litest_add("touchpad:topsoftbuttons", clickpad_topsoftbuttons_move_out_leftclick, LITEST_TOPBUTTONPAD, LITEST_ANY);
-	litest_add("touchpad:topsoftbuttons", clickpad_topsoftbuttons_move_out_leftclick_before_timeout, LITEST_TOPBUTTONPAD, LITEST_ANY);
+	litest_add("touchpad:topsoftbuttons", clickpad_topsoftbuttons_move_out_ignore, LITEST_TOPBUTTONPAD, LITEST_ANY);
 	litest_add("touchpad:topsoftbuttons", clickpad_topsoftbuttons_clickfinger, LITEST_TOPBUTTONPAD, LITEST_ANY);
 	litest_add("touchpad:topsoftbuttons", clickpad_topsoftbuttons_clickfinger_dev_disabled, LITEST_TOPBUTTONPAD, LITEST_ANY);
 

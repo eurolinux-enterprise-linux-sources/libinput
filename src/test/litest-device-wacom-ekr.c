@@ -26,6 +26,13 @@
 #include "litest.h"
 #include "litest-int.h"
 
+static void
+litest_wacom_ekr_setup(void)
+{
+	struct litest_device *d = litest_create_device(LITEST_WACOM_EKR);
+	litest_set_current_device(d);
+}
+
 static struct input_event down[] = {
 	{ .type = -1, .code = -1 },
 };
@@ -109,9 +116,11 @@ static const char udev_rule[] =
 "\n"
 "LABEL=\"pad_end\"";
 
-TEST_DEVICE("wacom-ekr",
+struct litest_test_device litest_wacom_ekr_device = {
 	.type = LITEST_WACOM_EKR,
 	.features = LITEST_TABLET_PAD | LITEST_RING,
+	.shortname = "wacom-ekr",
+	.setup = litest_wacom_ekr_setup,
 	.interface = &interface,
 
 	.name = "Wacom Express Key Remote Pad",
@@ -119,4 +128,4 @@ TEST_DEVICE("wacom-ekr",
 	.events = events,
 	.absinfo = absinfo,
 	.udev_rule = udev_rule,
-)
+};

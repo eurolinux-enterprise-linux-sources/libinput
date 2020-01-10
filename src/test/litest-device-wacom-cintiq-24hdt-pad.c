@@ -31,6 +31,15 @@
 #include "litest.h"
 #include "litest-int.h"
 
+static void litest_wacom_cintiq_pad_setup(void)
+{
+	struct litest_device *d;
+
+	d = litest_create_device(LITEST_WACOM_CINTIQ_24HDT_PAD);
+
+	litest_set_current_device(d);
+}
+
 static void
 litest_wacom_cintiq_pad_teardown(void)
 {
@@ -122,9 +131,11 @@ static const char udev_rule[] =
 "\n"
 "LABEL=\"pad_end\"";
 
-TEST_DEVICE("wacom-cintiq-24hdt-pad",
+struct litest_test_device litest_wacom_cintiq_24hdt_pad_device = {
 	.type = LITEST_WACOM_CINTIQ_24HDT_PAD,
 	.features = LITEST_TABLET_PAD | LITEST_RING,
+	.shortname = "wacom-cintiq-24hdt-pad",
+	.setup = litest_wacom_cintiq_pad_setup,
 	.teardown = litest_wacom_cintiq_pad_teardown,
 	.interface = &interface,
 
@@ -133,4 +144,4 @@ TEST_DEVICE("wacom-cintiq-24hdt-pad",
 	.events = events,
 	.absinfo = absinfo,
 	.udev_rule = udev_rule,
-)
+};

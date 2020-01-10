@@ -26,6 +26,13 @@
 #include "litest.h"
 #include "litest-int.h"
 
+static void
+litest_elantech_touchpad_setup(void)
+{
+	struct litest_device *d = litest_create_device(LITEST_ELANTECH_TOUCHPAD);
+	litest_set_current_device(d);
+}
+
 static struct input_event down[] = {
 	{ .type = EV_ABS, .code = ABS_X, .value = LITEST_AUTO_ASSIGN  },
 	{ .type = EV_ABS, .code = ABS_Y, .value = LITEST_AUTO_ASSIGN },
@@ -98,13 +105,15 @@ static struct input_absinfo absinfo[] = {
 	{ .value = -1 }
 };
 
-TEST_DEVICE("elantech",
+struct litest_test_device litest_elantech_touchpad_device = {
 	.type = LITEST_ELANTECH_TOUCHPAD,
 	.features = LITEST_TOUCHPAD | LITEST_BUTTON,
+	.shortname = "elantech",
+	.setup = litest_elantech_touchpad_setup,
 	.interface = &interface,
 
 	.name = "ETPS/2 Elantech Touchpad",
 	.id = &input_id,
 	.events = events,
 	.absinfo = absinfo,
-)
+};

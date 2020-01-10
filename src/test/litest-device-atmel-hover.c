@@ -30,6 +30,16 @@
 #include "litest.h"
 #include "litest-int.h"
 
+static void
+atmel_hover_create(struct litest_device *d);
+
+static void
+litest_atmel_hover_setup(void)
+{
+	struct litest_device *d = litest_create_device(LITEST_ATMEL_HOVER);
+	litest_set_current_device(d);
+}
+
 static struct input_event down[] = {
 	{ .type = EV_ABS, .code = ABS_X, .value = LITEST_AUTO_ASSIGN  },
 	{ .type = EV_ABS, .code = ABS_Y, .value = LITEST_AUTO_ASSIGN },
@@ -66,24 +76,10 @@ static struct input_event up[] = {
 	{ .type = -1, .code = -1 },
 };
 
-static int
-get_axis_default(struct litest_device *d, unsigned int evcode, int32_t *value)
-{
-	switch (evcode) {
-	case ABS_PRESSURE:
-	case ABS_MT_PRESSURE:
-		*value = 30;
-		return 0;
-	}
-	return 1;
-}
-
 static struct litest_device_interface interface = {
 	.touch_down_events = down,
 	.touch_move_events = move,
 	.touch_up_events = up,
-
-	.get_axis_default = get_axis_default,
 };
 
 static struct input_id input_id = {
@@ -121,13 +117,32 @@ static struct input_absinfo absinfo[] = {
 	{ .value = -1 }
 };
 
-TEST_DEVICE("atmel-hover",
+struct litest_test_device litest_atmel_hover_device = {
 	.type = LITEST_ATMEL_HOVER,
 	.features = LITEST_TOUCHPAD | LITEST_BUTTON | LITEST_CLICKPAD | LITEST_HOVER,
+	.shortname = "atmel hover",
+	.setup = litest_atmel_hover_setup,
 	.interface = &interface,
+	.create = atmel_hover_create,
 
 	.name = "Atmel maXTouch Touchpad",
 	.id = &input_id,
 	.events = events,
 	.absinfo = absinfo,
-)
+};
+
+static void
+atmel_hover_create(struct litest_device *d)
+{
+	struct litest_semi_mt *semi_mt = zalloc(sizeof(*semi_mt));
+	assert(semi_mt);
+
+	d->private = semi_mt;
+
+	d->uinput = litest_create_uinput_device_from_description(
+			litest_atmel_hover_device.name,
+			litest_atmel_hover_device.id,
+			absinfo,
+			events);
+	d->interface = &interface;
+}

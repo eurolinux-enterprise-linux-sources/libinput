@@ -1,0 +1,26 @@
+From ba5b91b1335456d1ef2aa6cdd76cf3ff9d73d59b Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Tue, 14 Mar 2017 12:04:06 +1000
+Subject: [PATCH 5/6] test: fix tablet touch arbitration case
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+---
+ test/test-tablet.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/test/test-tablet.c b/test/test-tablet.c
+index c4f70ec..ae45a62 100644
+--- a/test/test-tablet.c
++++ b/test/test-tablet.c
+@@ -3935,7 +3935,7 @@ touch_arbitration_remove_touch(struct litest_device *dev,
+ START_TEST(intuos_touch_arbitration_remove_touch)
+ {
+ 	touch_arbitration_remove_touch(litest_current_device(),
+-				       LITEST_WACOM_INTUOS,
++				       LITEST_WACOM_FINGER,
+ 				       true);
+ }
+ END_TEST
+-- 
+1.8.3.1
+
