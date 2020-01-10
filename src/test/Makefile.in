@@ -128,14 +128,16 @@ am__liblitest_la_SOURCES_DIST = litest.h litest-int.h \
 	litest-device-asus-rog-gladius.c litest-device-atmel-hover.c \
 	litest-device-bcm5974.c litest-device-calibrated-touchscreen.c \
 	litest-device-cyborg-rat-5.c litest-device-elantech-touchpad.c \
-	litest-device-generic-singletouch.c \
+	litest-device-generic-singletouch.c litest-device-gpio-keys.c \
 	litest-device-huion-pentablet.c litest-device-keyboard.c \
 	litest-device-keyboard-all-codes.c \
 	litest-device-keyboard-razer-blackwidow.c \
+	litest-device-lid-switch.c litest-device-lid-switch-surface3.c \
 	litest-device-logitech-trackball.c \
 	litest-device-nexus4-touch-screen.c \
 	litest-device-magic-trackpad.c litest-device-mouse.c \
-	litest-device-mouse-roccat.c litest-device-mouse-low-dpi.c \
+	litest-device-mouse-wheel-tilt.c litest-device-mouse-roccat.c \
+	litest-device-mouse-low-dpi.c \
 	litest-device-mouse-wheel-click-angle.c \
 	litest-device-mouse-wheel-click-count.c \
 	litest-device-ms-surface-cover.c \
@@ -161,6 +163,7 @@ am__liblitest_la_SOURCES_DIST = litest.h litest-int.h \
 	litest-device-wacom-intuos5-pen.c \
 	litest-device-wacom-isdv4-e6-pen.c \
 	litest-device-wacom-isdv4-e6-finger.c \
+	litest-device-wacom-mobilestudio-pro-pad.c \
 	litest-device-waltop-tablet.c litest-device-wheel-only.c \
 	litest-device-xen-virtual-pointer.c \
 	litest-device-vmware-virtual-usb-mouse.c \
@@ -180,14 +183,18 @@ am__liblitest_la_SOURCES_DIST = litest.h litest-int.h \
 @BUILD_TESTS_TRUE@	liblitest_la-litest-device-cyborg-rat-5.lo \
 @BUILD_TESTS_TRUE@	liblitest_la-litest-device-elantech-touchpad.lo \
 @BUILD_TESTS_TRUE@	liblitest_la-litest-device-generic-singletouch.lo \
+@BUILD_TESTS_TRUE@	liblitest_la-litest-device-gpio-keys.lo \
 @BUILD_TESTS_TRUE@	liblitest_la-litest-device-huion-pentablet.lo \
 @BUILD_TESTS_TRUE@	liblitest_la-litest-device-keyboard.lo \
 @BUILD_TESTS_TRUE@	liblitest_la-litest-device-keyboard-all-codes.lo \
 @BUILD_TESTS_TRUE@	liblitest_la-litest-device-keyboard-razer-blackwidow.lo \
+@BUILD_TESTS_TRUE@	liblitest_la-litest-device-lid-switch.lo \
+@BUILD_TESTS_TRUE@	liblitest_la-litest-device-lid-switch-surface3.lo \
 @BUILD_TESTS_TRUE@	liblitest_la-litest-device-logitech-trackball.lo \
 @BUILD_TESTS_TRUE@	liblitest_la-litest-device-nexus4-touch-screen.lo \
 @BUILD_TESTS_TRUE@	liblitest_la-litest-device-magic-trackpad.lo \
 @BUILD_TESTS_TRUE@	liblitest_la-litest-device-mouse.lo \
+@BUILD_TESTS_TRUE@	liblitest_la-litest-device-mouse-wheel-tilt.lo \
 @BUILD_TESTS_TRUE@	liblitest_la-litest-device-mouse-roccat.lo \
 @BUILD_TESTS_TRUE@	liblitest_la-litest-device-mouse-low-dpi.lo \
 @BUILD_TESTS_TRUE@	liblitest_la-litest-device-mouse-wheel-click-angle.lo \
@@ -220,6 +227,7 @@ am__liblitest_la_SOURCES_DIST = litest.h litest-int.h \
 @BUILD_TESTS_TRUE@	liblitest_la-litest-device-wacom-intuos5-pen.lo \
 @BUILD_TESTS_TRUE@	liblitest_la-litest-device-wacom-isdv4-e6-pen.lo \
 @BUILD_TESTS_TRUE@	liblitest_la-litest-device-wacom-isdv4-e6-finger.lo \
+@BUILD_TESTS_TRUE@	liblitest_la-litest-device-wacom-mobilestudio-pro-pad.lo \
 @BUILD_TESTS_TRUE@	liblitest_la-litest-device-waltop-tablet.lo \
 @BUILD_TESTS_TRUE@	liblitest_la-litest-device-wheel-only.lo \
 @BUILD_TESTS_TRUE@	liblitest_la-litest-device-xen-virtual-pointer.lo \
@@ -246,7 +254,8 @@ am__libinput_test_suite_runner_SOURCES_DIST = test-udev.c test-path.c \
 	test-pointer.c test-touch.c test-log.c test-tablet.c \
 	test-pad.c test-touchpad.c test-touchpad-tap.c \
 	test-touchpad-buttons.c test-trackpoint.c test-trackball.c \
-	test-misc.c test-keyboard.c test-device.c test-gestures.c
+	test-misc.c test-keyboard.c test-device.c test-gestures.c \
+	test-lid.c
 @BUILD_TESTS_TRUE@am_libinput_test_suite_runner_OBJECTS = libinput_test_suite_runner-test-udev.$(OBJEXT) \
 @BUILD_TESTS_TRUE@	libinput_test_suite_runner-test-path.$(OBJEXT) \
 @BUILD_TESTS_TRUE@	libinput_test_suite_runner-test-pointer.$(OBJEXT) \
@@ -262,7 +271,8 @@ am__libinput_test_suite_runner_SOURCES_DIST = test-udev.c test-path.c \
 @BUILD_TESTS_TRUE@	libinput_test_suite_runner-test-misc.$(OBJEXT) \
 @BUILD_TESTS_TRUE@	libinput_test_suite_runner-test-keyboard.$(OBJEXT) \
 @BUILD_TESTS_TRUE@	libinput_test_suite_runner-test-device.$(OBJEXT) \
-@BUILD_TESTS_TRUE@	libinput_test_suite_runner-test-gestures.$(OBJEXT)
+@BUILD_TESTS_TRUE@	libinput_test_suite_runner-test-gestures.$(OBJEXT) \
+@BUILD_TESTS_TRUE@	libinput_test_suite_runner-test-lid.$(OBJEXT)
 libinput_test_suite_runner_OBJECTS =  \
 	$(am_libinput_test_suite_runner_OBJECTS)
 @BUILD_TESTS_TRUE@am__DEPENDENCIES_3 = liblitest.la \
@@ -658,6 +668,8 @@ EXEEXT = @EXEEXT@
 FGREP = @FGREP@
 GCC_CFLAGS = @GCC_CFLAGS@
 GCC_CXXFLAGS = @GCC_CXXFLAGS@
+GCOV_CFLAGS = @GCOV_CFLAGS@
+GCOV_LDFLAGS = @GCOV_LDFLAGS@
 GREP = @GREP@
 GTK_CFLAGS = @GTK_CFLAGS@
 GTK_LIBS = @GTK_LIBS@
@@ -788,7 +800,7 @@ top_srcdir = @top_srcdir@
 @BUILD_TESTS_TRUE@              $(LIBUDEV_CFLAGS) \
 @BUILD_TESTS_TRUE@              -I$(top_builddir)/src # for libinput-version.h
 
-@BUILD_TESTS_TRUE@AM_CFLAGS = $(GCC_CFLAGS)
+@BUILD_TESTS_TRUE@AM_CFLAGS = $(GCC_CFLAGS) $(GCOV_CFLAGS)
 @BUILD_TESTS_TRUE@AM_CXXFLAGS = $(GCC_CXXFLAGS)
 @BUILD_TESTS_TRUE@TEST_LIBS = liblitest.la $(CHECK_LIBS) $(LIBUDEV_LIBS) $(LIBEVDEV_LIBS) $(top_builddir)/src/libinput.la
 @BUILD_TESTS_TRUE@noinst_LTLIBRARIES = liblitest.la
@@ -810,14 +822,18 @@ top_srcdir = @top_srcdir@
 @BUILD_TESTS_TRUE@	litest-device-cyborg-rat-5.c \
 @BUILD_TESTS_TRUE@	litest-device-elantech-touchpad.c \
 @BUILD_TESTS_TRUE@	litest-device-generic-singletouch.c \
+@BUILD_TESTS_TRUE@	litest-device-gpio-keys.c \
 @BUILD_TESTS_TRUE@	litest-device-huion-pentablet.c \
 @BUILD_TESTS_TRUE@	litest-device-keyboard.c \
 @BUILD_TESTS_TRUE@	litest-device-keyboard-all-codes.c \
 @BUILD_TESTS_TRUE@	litest-device-keyboard-razer-blackwidow.c \
+@BUILD_TESTS_TRUE@	litest-device-lid-switch.c \
+@BUILD_TESTS_TRUE@	litest-device-lid-switch-surface3.c \
 @BUILD_TESTS_TRUE@	litest-device-logitech-trackball.c \
 @BUILD_TESTS_TRUE@	litest-device-nexus4-touch-screen.c \
 @BUILD_TESTS_TRUE@	litest-device-magic-trackpad.c \
 @BUILD_TESTS_TRUE@	litest-device-mouse.c \
+@BUILD_TESTS_TRUE@	litest-device-mouse-wheel-tilt.c \
 @BUILD_TESTS_TRUE@	litest-device-mouse-roccat.c \
 @BUILD_TESTS_TRUE@	litest-device-mouse-low-dpi.c \
 @BUILD_TESTS_TRUE@	litest-device-mouse-wheel-click-angle.c \
@@ -850,6 +866,7 @@ top_srcdir = @top_srcdir@
 @BUILD_TESTS_TRUE@	litest-device-wacom-intuos5-pen.c \
 @BUILD_TESTS_TRUE@	litest-device-wacom-isdv4-e6-pen.c \
 @BUILD_TESTS_TRUE@	litest-device-wacom-isdv4-e6-finger.c \
+@BUILD_TESTS_TRUE@	litest-device-wacom-mobilestudio-pro-pad.c \
 @BUILD_TESTS_TRUE@	litest-device-waltop-tablet.c \
 @BUILD_TESTS_TRUE@	litest-device-wheel-only.c \
 @BUILD_TESTS_TRUE@	litest-device-xen-virtual-pointer.c \
@@ -864,6 +881,7 @@ top_srcdir = @top_srcdir@
 @BUILD_TESTS_TRUE@	-DLIBINPUT_MODEL_QUIRKS_UDEV_RULES_FILE="\"$(abs_top_builddir)/udev/90-libinput-model-quirks-litest.rules\"" \
 @BUILD_TESTS_TRUE@	-DLIBINPUT_MODEL_QUIRKS_UDEV_HWDB_FILE="\"$(abs_top_srcdir)/udev/90-libinput-model-quirks.hwdb\"" \
 @BUILD_TESTS_TRUE@	-DLIBINPUT_TEST_DEVICE_RULES_FILE="\"$(abs_top_srcdir)/udev/80-libinput-test-device.rules\"" \
+@BUILD_TESTS_TRUE@	-DLIBINPUT_DEVICE_GROUPS_RULES_FILE="\"$(abs_top_srcdir)/udev/80-libinput-device-groups-litest.rules\"" \
 @BUILD_TESTS_TRUE@	$(am__append_2)
 @BUILD_TESTS_TRUE@run_tests = \
 @BUILD_TESTS_TRUE@	    test-litest-selftest \
@@ -891,7 +909,8 @@ top_srcdir = @top_srcdir@
 @BUILD_TESTS_TRUE@				     test-misc.c \
 @BUILD_TESTS_TRUE@				     test-keyboard.c \
 @BUILD_TESTS_TRUE@				     test-device.c \
-@BUILD_TESTS_TRUE@				     test-gestures.c
+@BUILD_TESTS_TRUE@				     test-gestures.c \
+@BUILD_TESTS_TRUE@				     test-lid.c
 
 @BUILD_TESTS_TRUE@libinput_test_suite_runner_CFLAGS = $(AM_CFLAGS) -DLIBINPUT_LT_VERSION="\"$(LIBINPUT_LT_VERSION)\""
 @BUILD_TESTS_TRUE@libinput_test_suite_runner_LDADD = $(TEST_LIBS)
@@ -926,6 +945,7 @@ top_srcdir = @top_srcdir@
 
 @BUILD_TESTS_TRUE@@HAVE_VALGRIND_TRUE@DISTCLEANFILES = test-suite-valgrind.log
 EXTRA_DIST = valgrind.suppressions
+@GCOV_ENABLED_TRUE@CLEANFILES = gcov-reports/*.gcov gcov-reports/summary.txt *.gcno *.gcda
 all: all-am
 
 .SUFFIXES:
@@ -1018,6 +1038,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libinput_test_suite_runner-test-device.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libinput_test_suite_runner-test-gestures.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libinput_test_suite_runner-test-keyboard.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libinput_test_suite_runner-test-lid.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libinput_test_suite_runner-test-log.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libinput_test_suite_runner-test-misc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libinput_test_suite_runner-test-pad.Po@am__quote@
@@ -1046,16 +1067,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblitest_la-litest-device-cyborg-rat-5.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblitest_la-litest-device-elantech-touchpad.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblitest_la-litest-device-generic-singletouch.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblitest_la-litest-device-gpio-keys.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblitest_la-litest-device-huion-pentablet.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblitest_la-litest-device-keyboard-all-codes.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblitest_la-litest-device-keyboard-razer-blackwidow.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblitest_la-litest-device-keyboard.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblitest_la-litest-device-lid-switch-surface3.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblitest_la-litest-device-lid-switch.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblitest_la-litest-device-logitech-trackball.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblitest_la-litest-device-magic-trackpad.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblitest_la-litest-device-mouse-low-dpi.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblitest_la-litest-device-mouse-roccat.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblitest_la-litest-device-mouse-wheel-click-angle.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblitest_la-litest-device-mouse-wheel-click-count.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblitest_la-litest-device-mouse-wheel-tilt.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblitest_la-litest-device-mouse.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblitest_la-litest-device-ms-surface-cover.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblitest_la-litest-device-nexus4-touch-screen.Plo@am__quote@
@@ -1087,6 +1112,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblitest_la-litest-device-wacom-intuos5-pen.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblitest_la-litest-device-wacom-isdv4-e6-finger.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblitest_la-litest-device-wacom-isdv4-e6-pen.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblitest_la-litest-device-wacom-mobilestudio-pro-pad.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblitest_la-litest-device-waltop-tablet.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblitest_la-litest-device-wheel-only.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblitest_la-litest-device-xen-virtual-pointer.Plo@am__quote@
@@ -1225,6 +1251,13 @@ liblitest_la-litest-device-generic-singletouch.lo: litest-device-generic-singlet
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblitest_la_CFLAGS) $(CFLAGS) -c -o liblitest_la-litest-device-generic-singletouch.lo `test -f 'litest-device-generic-singletouch.c' || echo '$(srcdir)/'`litest-device-generic-singletouch.c
 
+liblitest_la-litest-device-gpio-keys.lo: litest-device-gpio-keys.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblitest_la_CFLAGS) $(CFLAGS) -MT liblitest_la-litest-device-gpio-keys.lo -MD -MP -MF $(DEPDIR)/liblitest_la-litest-device-gpio-keys.Tpo -c -o liblitest_la-litest-device-gpio-keys.lo `test -f 'litest-device-gpio-keys.c' || echo '$(srcdir)/'`litest-device-gpio-keys.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/liblitest_la-litest-device-gpio-keys.Tpo $(DEPDIR)/liblitest_la-litest-device-gpio-keys.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='litest-device-gpio-keys.c' object='liblitest_la-litest-device-gpio-keys.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblitest_la_CFLAGS) $(CFLAGS) -c -o liblitest_la-litest-device-gpio-keys.lo `test -f 'litest-device-gpio-keys.c' || echo '$(srcdir)/'`litest-device-gpio-keys.c
+
 liblitest_la-litest-device-huion-pentablet.lo: litest-device-huion-pentablet.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblitest_la_CFLAGS) $(CFLAGS) -MT liblitest_la-litest-device-huion-pentablet.lo -MD -MP -MF $(DEPDIR)/liblitest_la-litest-device-huion-pentablet.Tpo -c -o liblitest_la-litest-device-huion-pentablet.lo `test -f 'litest-device-huion-pentablet.c' || echo '$(srcdir)/'`litest-device-huion-pentablet.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/liblitest_la-litest-device-huion-pentablet.Tpo $(DEPDIR)/liblitest_la-litest-device-huion-pentablet.Plo
@@ -1253,6 +1286,20 @@ liblitest_la-litest-device-keyboard-razer-blackwidow.lo: litest-device-keyboard-
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblitest_la_CFLAGS) $(CFLAGS) -c -o liblitest_la-litest-device-keyboard-razer-blackwidow.lo `test -f 'litest-device-keyboard-razer-blackwidow.c' || echo '$(srcdir)/'`litest-device-keyboard-razer-blackwidow.c
 
+liblitest_la-litest-device-lid-switch.lo: litest-device-lid-switch.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblitest_la_CFLAGS) $(CFLAGS) -MT liblitest_la-litest-device-lid-switch.lo -MD -MP -MF $(DEPDIR)/liblitest_la-litest-device-lid-switch.Tpo -c -o liblitest_la-litest-device-lid-switch.lo `test -f 'litest-device-lid-switch.c' || echo '$(srcdir)/'`litest-device-lid-switch.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/liblitest_la-litest-device-lid-switch.Tpo $(DEPDIR)/liblitest_la-litest-device-lid-switch.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='litest-device-lid-switch.c' object='liblitest_la-litest-device-lid-switch.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblitest_la_CFLAGS) $(CFLAGS) -c -o liblitest_la-litest-device-lid-switch.lo `test -f 'litest-device-lid-switch.c' || echo '$(srcdir)/'`litest-device-lid-switch.c
+
+liblitest_la-litest-device-lid-switch-surface3.lo: litest-device-lid-switch-surface3.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblitest_la_CFLAGS) $(CFLAGS) -MT liblitest_la-litest-device-lid-switch-surface3.lo -MD -MP -MF $(DEPDIR)/liblitest_la-litest-device-lid-switch-surface3.Tpo -c -o liblitest_la-litest-device-lid-switch-surface3.lo `test -f 'litest-device-lid-switch-surface3.c' || echo '$(srcdir)/'`litest-device-lid-switch-surface3.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/liblitest_la-litest-device-lid-switch-surface3.Tpo $(DEPDIR)/liblitest_la-litest-device-lid-switch-surface3.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='litest-device-lid-switch-surface3.c' object='liblitest_la-litest-device-lid-switch-surface3.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblitest_la_CFLAGS) $(CFLAGS) -c -o liblitest_la-litest-device-lid-switch-surface3.lo `test -f 'litest-device-lid-switch-surface3.c' || echo '$(srcdir)/'`litest-device-lid-switch-surface3.c
+
 liblitest_la-litest-device-logitech-trackball.lo: litest-device-logitech-trackball.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblitest_la_CFLAGS) $(CFLAGS) -MT liblitest_la-litest-device-logitech-trackball.lo -MD -MP -MF $(DEPDIR)/liblitest_la-litest-device-logitech-trackball.Tpo -c -o liblitest_la-litest-device-logitech-trackball.lo `test -f 'litest-device-logitech-trackball.c' || echo '$(srcdir)/'`litest-device-logitech-trackball.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/liblitest_la-litest-device-logitech-trackball.Tpo $(DEPDIR)/liblitest_la-litest-device-logitech-trackball.Plo
@@ -1280,6 +1327,13 @@ liblitest_la-litest-device-mouse.lo: litest-device-mouse.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='litest-device-mouse.c' object='liblitest_la-litest-device-mouse.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblitest_la_CFLAGS) $(CFLAGS) -c -o liblitest_la-litest-device-mouse.lo `test -f 'litest-device-mouse.c' || echo '$(srcdir)/'`litest-device-mouse.c
+
+liblitest_la-litest-device-mouse-wheel-tilt.lo: litest-device-mouse-wheel-tilt.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblitest_la_CFLAGS) $(CFLAGS) -MT liblitest_la-litest-device-mouse-wheel-tilt.lo -MD -MP -MF $(DEPDIR)/liblitest_la-litest-device-mouse-wheel-tilt.Tpo -c -o liblitest_la-litest-device-mouse-wheel-tilt.lo `test -f 'litest-device-mouse-wheel-tilt.c' || echo '$(srcdir)/'`litest-device-mouse-wheel-tilt.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/liblitest_la-litest-device-mouse-wheel-tilt.Tpo $(DEPDIR)/liblitest_la-litest-device-mouse-wheel-tilt.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='litest-device-mouse-wheel-tilt.c' object='liblitest_la-litest-device-mouse-wheel-tilt.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblitest_la_CFLAGS) $(CFLAGS) -c -o liblitest_la-litest-device-mouse-wheel-tilt.lo `test -f 'litest-device-mouse-wheel-tilt.c' || echo '$(srcdir)/'`litest-device-mouse-wheel-tilt.c
 
 liblitest_la-litest-device-mouse-roccat.lo: litest-device-mouse-roccat.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblitest_la_CFLAGS) $(CFLAGS) -MT liblitest_la-litest-device-mouse-roccat.lo -MD -MP -MF $(DEPDIR)/liblitest_la-litest-device-mouse-roccat.Tpo -c -o liblitest_la-litest-device-mouse-roccat.lo `test -f 'litest-device-mouse-roccat.c' || echo '$(srcdir)/'`litest-device-mouse-roccat.c
@@ -1504,6 +1558,13 @@ liblitest_la-litest-device-wacom-isdv4-e6-finger.lo: litest-device-wacom-isdv4-e
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='litest-device-wacom-isdv4-e6-finger.c' object='liblitest_la-litest-device-wacom-isdv4-e6-finger.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblitest_la_CFLAGS) $(CFLAGS) -c -o liblitest_la-litest-device-wacom-isdv4-e6-finger.lo `test -f 'litest-device-wacom-isdv4-e6-finger.c' || echo '$(srcdir)/'`litest-device-wacom-isdv4-e6-finger.c
+
+liblitest_la-litest-device-wacom-mobilestudio-pro-pad.lo: litest-device-wacom-mobilestudio-pro-pad.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblitest_la_CFLAGS) $(CFLAGS) -MT liblitest_la-litest-device-wacom-mobilestudio-pro-pad.lo -MD -MP -MF $(DEPDIR)/liblitest_la-litest-device-wacom-mobilestudio-pro-pad.Tpo -c -o liblitest_la-litest-device-wacom-mobilestudio-pro-pad.lo `test -f 'litest-device-wacom-mobilestudio-pro-pad.c' || echo '$(srcdir)/'`litest-device-wacom-mobilestudio-pro-pad.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/liblitest_la-litest-device-wacom-mobilestudio-pro-pad.Tpo $(DEPDIR)/liblitest_la-litest-device-wacom-mobilestudio-pro-pad.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='litest-device-wacom-mobilestudio-pro-pad.c' object='liblitest_la-litest-device-wacom-mobilestudio-pro-pad.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblitest_la_CFLAGS) $(CFLAGS) -c -o liblitest_la-litest-device-wacom-mobilestudio-pro-pad.lo `test -f 'litest-device-wacom-mobilestudio-pro-pad.c' || echo '$(srcdir)/'`litest-device-wacom-mobilestudio-pro-pad.c
 
 liblitest_la-litest-device-waltop-tablet.lo: litest-device-waltop-tablet.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblitest_la_CFLAGS) $(CFLAGS) -MT liblitest_la-litest-device-waltop-tablet.lo -MD -MP -MF $(DEPDIR)/liblitest_la-litest-device-waltop-tablet.Tpo -c -o liblitest_la-litest-device-waltop-tablet.lo `test -f 'litest-device-waltop-tablet.c' || echo '$(srcdir)/'`litest-device-waltop-tablet.c
@@ -1770,6 +1831,20 @@ libinput_test_suite_runner-test-gestures.obj: test-gestures.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test-gestures.c' object='libinput_test_suite_runner-test-gestures.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_test_suite_runner_CFLAGS) $(CFLAGS) -c -o libinput_test_suite_runner-test-gestures.obj `if test -f 'test-gestures.c'; then $(CYGPATH_W) 'test-gestures.c'; else $(CYGPATH_W) '$(srcdir)/test-gestures.c'; fi`
+
+libinput_test_suite_runner-test-lid.o: test-lid.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_test_suite_runner_CFLAGS) $(CFLAGS) -MT libinput_test_suite_runner-test-lid.o -MD -MP -MF $(DEPDIR)/libinput_test_suite_runner-test-lid.Tpo -c -o libinput_test_suite_runner-test-lid.o `test -f 'test-lid.c' || echo '$(srcdir)/'`test-lid.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libinput_test_suite_runner-test-lid.Tpo $(DEPDIR)/libinput_test_suite_runner-test-lid.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test-lid.c' object='libinput_test_suite_runner-test-lid.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_test_suite_runner_CFLAGS) $(CFLAGS) -c -o libinput_test_suite_runner-test-lid.o `test -f 'test-lid.c' || echo '$(srcdir)/'`test-lid.c
+
+libinput_test_suite_runner-test-lid.obj: test-lid.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_test_suite_runner_CFLAGS) $(CFLAGS) -MT libinput_test_suite_runner-test-lid.obj -MD -MP -MF $(DEPDIR)/libinput_test_suite_runner-test-lid.Tpo -c -o libinput_test_suite_runner-test-lid.obj `if test -f 'test-lid.c'; then $(CYGPATH_W) 'test-lid.c'; else $(CYGPATH_W) '$(srcdir)/test-lid.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libinput_test_suite_runner-test-lid.Tpo $(DEPDIR)/libinput_test_suite_runner-test-lid.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test-lid.c' object='libinput_test_suite_runner-test-lid.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_test_suite_runner_CFLAGS) $(CFLAGS) -c -o libinput_test_suite_runner-test-lid.obj `if test -f 'test-lid.c'; then $(CYGPATH_W) 'test-lid.c'; else $(CYGPATH_W) '$(srcdir)/test-lid.c'; fi`
 
 test_build_linker-build-pedantic.o: build-pedantic.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_build_linker_CFLAGS) $(CFLAGS) -MT test_build_linker-build-pedantic.o -MD -MP -MF $(DEPDIR)/test_build_linker-build-pedantic.Tpo -c -o test_build_linker-build-pedantic.o `test -f 'build-pedantic.c' || echo '$(srcdir)/'`build-pedantic.c
@@ -2171,6 +2246,7 @@ mostlyclean-generic:
 	-test -z "$(TEST_SUITE_LOG)" || rm -f $(TEST_SUITE_LOG)
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -2275,6 +2351,11 @@ uninstall-am:
 @BUILD_TESTS_TRUE@@HAVE_VALGRIND_TRUE@	$(MAKE) check-TESTS TEST_SUITE_LOG="test-suite-valgrind.log" LOG_COMPILER="$(VALGRIND)" LOG_FLAGS="$(VALGRIND_FLAGS)" CK_FORK=no USING_VALGRIND=yes
 
 @BUILD_TESTS_TRUE@@HAVE_VALGRIND_TRUE@check: valgrind
+
+@GCOV_ENABLED_TRUE@gcov: generate-gcov-report.sh check-TESTS
+@GCOV_ENABLED_TRUE@	$(AM_V_GEN)$(srcdir)/generate-gcov-report.sh gcov-reports $(top_builddir)/src $(builddir)
+@GCOV_ENABLED_FALSE@gcov:
+@GCOV_ENABLED_FALSE@	@echo "Run ./configure --enable-gcov to produce gcov reports" && false
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

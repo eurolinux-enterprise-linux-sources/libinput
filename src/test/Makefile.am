@@ -6,7 +6,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/include \
               $(LIBUDEV_CFLAGS) \
               -I$(top_builddir)/src # for libinput-version.h
 
-AM_CFLAGS = $(GCC_CFLAGS)
+AM_CFLAGS = $(GCC_CFLAGS) $(GCOV_CFLAGS)
 AM_CXXFLAGS = $(GCC_CXXFLAGS)
 
 TEST_LIBS = liblitest.la $(CHECK_LIBS) $(LIBUDEV_LIBS) $(LIBEVDEV_LIBS) $(top_builddir)/src/libinput.la
@@ -29,14 +29,18 @@ liblitest_la_SOURCES = \
 	litest-device-cyborg-rat-5.c \
 	litest-device-elantech-touchpad.c \
 	litest-device-generic-singletouch.c \
+	litest-device-gpio-keys.c \
 	litest-device-huion-pentablet.c \
 	litest-device-keyboard.c \
 	litest-device-keyboard-all-codes.c \
 	litest-device-keyboard-razer-blackwidow.c \
+	litest-device-lid-switch.c \
+	litest-device-lid-switch-surface3.c \
 	litest-device-logitech-trackball.c \
 	litest-device-nexus4-touch-screen.c \
 	litest-device-magic-trackpad.c \
 	litest-device-mouse.c \
+	litest-device-mouse-wheel-tilt.c \
 	litest-device-mouse-roccat.c \
 	litest-device-mouse-low-dpi.c \
 	litest-device-mouse-wheel-click-angle.c \
@@ -69,6 +73,7 @@ liblitest_la_SOURCES = \
 	litest-device-wacom-intuos5-pen.c \
 	litest-device-wacom-isdv4-e6-pen.c \
 	litest-device-wacom-isdv4-e6-finger.c \
+	litest-device-wacom-mobilestudio-pro-pad.c \
 	litest-device-waltop-tablet.c \
 	litest-device-wheel-only.c \
 	litest-device-xen-virtual-pointer.c \
@@ -79,7 +84,8 @@ liblitest_la_LIBADD = $(top_builddir)/src/libinput-util.la
 liblitest_la_CFLAGS = $(AM_CFLAGS) \
 	      -DLIBINPUT_MODEL_QUIRKS_UDEV_RULES_FILE="\"$(abs_top_builddir)/udev/90-libinput-model-quirks-litest.rules\"" \
 	      -DLIBINPUT_MODEL_QUIRKS_UDEV_HWDB_FILE="\"$(abs_top_srcdir)/udev/90-libinput-model-quirks.hwdb\"" \
-	      -DLIBINPUT_TEST_DEVICE_RULES_FILE="\"$(abs_top_srcdir)/udev/80-libinput-test-device.rules\""
+	      -DLIBINPUT_TEST_DEVICE_RULES_FILE="\"$(abs_top_srcdir)/udev/80-libinput-test-device.rules\"" \
+	      -DLIBINPUT_DEVICE_GROUPS_RULES_FILE="\"$(abs_top_srcdir)/udev/80-libinput-device-groups-litest.rules\""
 if HAVE_LIBUNWIND
 liblitest_la_LIBADD += $(LIBUNWIND_LIBS) -ldl
 liblitest_la_CFLAGS += $(LIBUNWIND_CFLAGS)
@@ -117,7 +123,8 @@ libinput_test_suite_runner_SOURCES = test-udev.c \
 				     test-misc.c \
 				     test-keyboard.c \
 				     test-device.c \
-				     test-gestures.c
+				     test-gestures.c \
+				     test-lid.c
 
 libinput_test_suite_runner_CFLAGS = $(AM_CFLAGS) -DLIBINPUT_LT_VERSION="\"$(LIBINPUT_LT_VERSION)\""
 libinput_test_suite_runner_LDADD = $(TEST_LIBS)
@@ -164,3 +171,14 @@ DISTCLEANFILES=test-suite-valgrind.log
 endif
 endif
 EXTRA_DIST=valgrind.suppressions
+
+if GCOV_ENABLED
+
+CLEANFILES = gcov-reports/*.gcov gcov-reports/summary.txt *.gcno *.gcda
+
+gcov: generate-gcov-report.sh check-TESTS
+	$(AM_V_GEN)$(srcdir)/generate-gcov-report.sh gcov-reports $(top_builddir)/src $(builddir)
+else
+gcov:
+	@echo "Run ./configure --enable-gcov to produce gcov reports" && false
+endif

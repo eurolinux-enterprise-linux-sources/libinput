@@ -1,33 +1,36 @@
-From cfb08e3c13dda5ba7011f2e7d609f89c5f13291e Mon Sep 17 00:00:00 2001
+From 2b3d06f9fa1bca1532a2175190f77855fadbd021 Mon Sep 17 00:00:00 2001
 From: Peter Hutterer <peter.hutterer@who-t.net>
 Date: Tue, 14 Mar 2017 10:23:22 +1000
-Subject: [PATCH 1/6] RHEL: test: add the bits missing in check 0.9.9
+Subject: [PATCH libinput] RHEL: test: add the bits missing in check 0.9.9
 
 Allow the test suite to build on RHEL 7.x
 
 RHEL patch - do not upstream
 
 https://bugzilla.redhat.com/show_bug.cgi?id=1431640
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 ---
- configure.ac  |  2 +-
+ configure.ac  |  3 +--
  test/litest.h | 23 +++++++++++++++++++++++
- 2 files changed, 24 insertions(+), 1 deletion(-)
+ 2 files changed, 24 insertions(+), 2 deletions(-)
 
 diff --git a/configure.ac b/configure.ac
-index 1747834..652d684 100644
+index f6e91f45..4db225ee 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -177,7 +177,7 @@ AC_ARG_ENABLE(tests,
+@@ -158,9 +158,8 @@ AC_ARG_ENABLE(tests,
  	      [build_tests="$enableval"],
- 	      [build_tests="auto"])
+ 	      [build_tests="yes"])
  
--PKG_CHECK_MODULES(CHECK, [check >= 0.9.10], [HAVE_CHECK="yes"], [HAVE_CHECK="no"])
-+PKG_CHECK_MODULES(CHECK, [check >= 0.9.9], [HAVE_CHECK="yes"], [HAVE_CHECK="no"])
+-
+ if test "x$build_tests" = "xyes"; then
+-	PKG_CHECK_MODULES(CHECK, [check >= 0.9.10])
++	PKG_CHECK_MODULES(CHECK, [check >= 0.9.9])
  
- if test "x$build_tests" = "xauto"; then
- 	build_tests="$HAVE_CHECK"
+ 	AC_PATH_PROG(VALGRIND, [valgrind])
+ 
 diff --git a/test/litest.h b/test/litest.h
-index 726119f..7d22136 100644
+index 386aed84..8d4547a9 100644
 --- a/test/litest.h
 +++ b/test/litest.h
 @@ -33,6 +33,29 @@
@@ -61,5 +64,5 @@ index 726119f..7d22136 100644
  extern void litest_setup_tests_path(void);
  extern void litest_setup_tests_pointer(void);
 -- 
-1.8.3.1
+2.13.6
 

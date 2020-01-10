@@ -242,6 +242,8 @@ EXEEXT = @EXEEXT@
 FGREP = @FGREP@
 GCC_CFLAGS = @GCC_CFLAGS@
 GCC_CXXFLAGS = @GCC_CXXFLAGS@
+GCOV_CFLAGS = @GCOV_CFLAGS@
+GCOV_LDFLAGS = @GCOV_LDFLAGS@
 GREP = @GREP@
 GTK_CFLAGS = @GTK_CFLAGS@
 GTK_LIBS = @GTK_LIBS@
@@ -368,6 +370,7 @@ top_srcdir = @top_srcdir@
 SUBDIRS = src doc test tools udev
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 AM_DISTCHECK_CONFIGURE_FLAGS = --disable-test-run
+EXTRA_DIST = meson.build meson_options.txt
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -852,6 +855,9 @@ uninstall-am:
 
 valgrind:
 	(cd test; $(MAKE) valgrind)
+
+gcov:
+	(cd test; $(MAKE) gcov)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

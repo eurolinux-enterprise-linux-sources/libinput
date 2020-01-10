@@ -15,6 +15,7 @@
 @SET_MAKE@
 
 
+
 VPATH = @srcdir@
 am__is_gnu_make = { \
   if test -z '$(MAKELEVEL)'; then \
@@ -89,11 +90,13 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-noinst_PROGRAMS = event-debug$(EXEEXT) ptraccel-debug$(EXEEXT) \
-	$(am__EXEEXT_1)
-bin_PROGRAMS = libinput-list-devices$(EXEEXT) \
-	libinput-debug-events$(EXEEXT)
-@BUILD_EVENTGUI_TRUE@am__append_1 = event-gui
+noinst_PROGRAMS = ptraccel-debug$(EXEEXT)
+bin_PROGRAMS = libinput$(EXEEXT)
+tools_PROGRAMS = libinput-list-devices$(EXEEXT) \
+	libinput-debug-events$(EXEEXT) libinput-measure$(EXEEXT) \
+	libinput-measure-touchpad-tap$(EXEEXT) $(am__EXEEXT_1)
+@BUILD_DEBUG_GUI_TRUE@am__append_1 = libinput-debug-gui
+@BUILD_DEBUG_GUI_TRUE@am__append_2 = libinput-debug-gui.1
 subdir = tools
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -109,7 +112,8 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 am__DEPENDENCIES_1 =
-libshared_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+libshared_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1) ../src/libinput.la
 am_libshared_la_OBJECTS = libshared_la-shared.lo
 libshared_la_OBJECTS = $(am_libshared_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -119,46 +123,66 @@ am__v_lt_1 =
 libshared_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libshared_la_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)"
-@BUILD_EVENTGUI_TRUE@am__EXEEXT_1 = event-gui$(EXEEXT)
-PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
-am_event_debug_OBJECTS = event_debug-event-debug.$(OBJEXT)
-event_debug_OBJECTS = $(am_event_debug_OBJECTS)
-event_debug_DEPENDENCIES = ../src/libinput.la libshared.la \
+am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(toolsdir)" \
+	"$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)"
+@BUILD_DEBUG_GUI_TRUE@am__EXEEXT_1 = libinput-debug-gui$(EXEEXT)
+PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS) $(tools_PROGRAMS)
+am_libinput_OBJECTS = libinput-libinput-tool.$(OBJEXT)
+libinput_OBJECTS = $(am_libinput_OBJECTS)
+libinput_DEPENDENCIES = ../src/libinput.la libshared.la \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
-event_debug_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(event_debug_CFLAGS) \
-	$(CFLAGS) $(event_debug_LDFLAGS) $(LDFLAGS) -o $@
-am__event_gui_SOURCES_DIST = event-gui.c
-@BUILD_EVENTGUI_TRUE@am_event_gui_OBJECTS =  \
-@BUILD_EVENTGUI_TRUE@	event_gui-event-gui.$(OBJEXT)
-event_gui_OBJECTS = $(am_event_gui_OBJECTS)
-@BUILD_EVENTGUI_TRUE@event_gui_DEPENDENCIES = ../src/libinput.la \
-@BUILD_EVENTGUI_TRUE@	libshared.la $(am__DEPENDENCIES_1) \
-@BUILD_EVENTGUI_TRUE@	$(am__DEPENDENCIES_1) \
-@BUILD_EVENTGUI_TRUE@	$(am__DEPENDENCIES_1)
-event_gui_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(event_gui_CFLAGS) \
-	$(CFLAGS) $(event_gui_LDFLAGS) $(LDFLAGS) -o $@
-am__objects_1 = libinput_debug_events-event-debug.$(OBJEXT)
-am_libinput_debug_events_OBJECTS = $(am__objects_1)
+libinput_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libinput_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_libinput_debug_events_OBJECTS =  \
+	libinput_debug_events-libinput-debug-events.$(OBJEXT)
 libinput_debug_events_OBJECTS = $(am_libinput_debug_events_OBJECTS)
-am__DEPENDENCIES_2 = ../src/libinput.la libshared.la \
+libinput_debug_events_DEPENDENCIES = ../src/libinput.la libshared.la \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
-libinput_debug_events_DEPENDENCIES = $(am__DEPENDENCIES_2)
 libinput_debug_events_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(libinput_debug_events_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am__libinput_debug_gui_SOURCES_DIST = libinput-debug-gui.c
+@BUILD_DEBUG_GUI_TRUE@am_libinput_debug_gui_OBJECTS = libinput_debug_gui-libinput-debug-gui.$(OBJEXT)
+libinput_debug_gui_OBJECTS = $(am_libinput_debug_gui_OBJECTS)
+@BUILD_DEBUG_GUI_TRUE@libinput_debug_gui_DEPENDENCIES =  \
+@BUILD_DEBUG_GUI_TRUE@	../src/libinput.la libshared.la \
+@BUILD_DEBUG_GUI_TRUE@	$(am__DEPENDENCIES_1) \
+@BUILD_DEBUG_GUI_TRUE@	$(am__DEPENDENCIES_1) \
+@BUILD_DEBUG_GUI_TRUE@	$(am__DEPENDENCIES_1) \
+@BUILD_DEBUG_GUI_TRUE@	$(am__DEPENDENCIES_1)
+libinput_debug_gui_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(libinput_debug_gui_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_libinput_list_devices_OBJECTS =  \
 	libinput_list_devices-libinput-list-devices.$(OBJEXT)
 libinput_list_devices_OBJECTS = $(am_libinput_list_devices_OBJECTS)
 libinput_list_devices_DEPENDENCIES = ../src/libinput.la libshared.la \
-	$(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 libinput_list_devices_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(libinput_list_devices_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
+am_libinput_measure_OBJECTS =  \
+	libinput_measure-libinput-measure.$(OBJEXT)
+libinput_measure_OBJECTS = $(am_libinput_measure_OBJECTS)
+libinput_measure_DEPENDENCIES = ../src/libinput.la libshared.la \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+libinput_measure_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(libinput_measure_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
+	-o $@
+am_libinput_measure_touchpad_tap_OBJECTS = libinput_measure_touchpad_tap-libinput-measure-touchpad-tap.$(OBJEXT)
+libinput_measure_touchpad_tap_OBJECTS =  \
+	$(am_libinput_measure_touchpad_tap_OBJECTS)
+libinput_measure_touchpad_tap_DEPENDENCIES = ../src/libinput.la \
+	libshared.la $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+libinput_measure_touchpad_tap_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(libinput_measure_touchpad_tap_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_ptraccel_debug_OBJECTS = ptraccel-debug.$(OBJEXT)
 ptraccel_debug_OBJECTS = $(am_ptraccel_debug_OBJECTS)
 ptraccel_debug_DEPENDENCIES = ../src/libfilter.la ../src/libinput.la
@@ -166,6 +190,34 @@ ptraccel_debug_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(AM_CFLAGS) $(CFLAGS) $(ptraccel_debug_LDFLAGS) $(LDFLAGS) -o \
 	$@
+am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
+am__vpath_adj = case $$p in \
+    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
+    *) f=$$p;; \
+  esac;
+am__strip_dir = f=`echo $$p | sed -e 's|^.*/||'`;
+am__install_max = 40
+am__nobase_strip_setup = \
+  srcdirstrip=`echo "$(srcdir)" | sed 's/[].[^$$\\*|]/\\\\&/g'`
+am__nobase_strip = \
+  for p in $$list; do echo "$$p"; done | sed -e "s|$$srcdirstrip/||"
+am__nobase_list = $(am__nobase_strip_setup); \
+  for p in $$list; do echo "$$p $$p"; done | \
+  sed "s| $$srcdirstrip/| |;"' / .*\//!s/ .*/ ./; s,\( .*\)/[^/]*$$,\1,' | \
+  $(AWK) 'BEGIN { files["."] = "" } { files[$$2] = files[$$2] " " $$1; \
+    if (++n[$$2] == $(am__install_max)) \
+      { print $$2, files[$$2]; n[$$2] = 0; files[$$2] = "" } } \
+    END { for (dir in files) print dir, files[dir] }'
+am__base_list = \
+  sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
+  sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
+am__uninstall_files_from_dir = { \
+  test -z "$$files" \
+    || { test ! -d "$$dir" && test ! -f "$$dir" && test ! -r "$$dir"; } \
+    || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
+         $(am__cd) "$$dir" && rm -f $$files; }; \
+  }
+SCRIPTS = $(bin_SCRIPTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -200,44 +252,22 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(libshared_la_SOURCES) $(event_debug_SOURCES) \
-	$(event_gui_SOURCES) $(libinput_debug_events_SOURCES) \
-	$(libinput_list_devices_SOURCES) $(ptraccel_debug_SOURCES)
-DIST_SOURCES = $(libshared_la_SOURCES) $(event_debug_SOURCES) \
-	$(am__event_gui_SOURCES_DIST) $(libinput_debug_events_SOURCES) \
-	$(libinput_list_devices_SOURCES) $(ptraccel_debug_SOURCES)
+SOURCES = $(libshared_la_SOURCES) $(libinput_SOURCES) \
+	$(libinput_debug_events_SOURCES) $(libinput_debug_gui_SOURCES) \
+	$(libinput_list_devices_SOURCES) $(libinput_measure_SOURCES) \
+	$(libinput_measure_touchpad_tap_SOURCES) \
+	$(ptraccel_debug_SOURCES)
+DIST_SOURCES = $(libshared_la_SOURCES) $(libinput_SOURCES) \
+	$(libinput_debug_events_SOURCES) \
+	$(am__libinput_debug_gui_SOURCES_DIST) \
+	$(libinput_list_devices_SOURCES) $(libinput_measure_SOURCES) \
+	$(libinput_measure_touchpad_tap_SOURCES) \
+	$(ptraccel_debug_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
-am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
-am__vpath_adj = case $$p in \
-    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
-    *) f=$$p;; \
-  esac;
-am__strip_dir = f=`echo $$p | sed -e 's|^.*/||'`;
-am__install_max = 40
-am__nobase_strip_setup = \
-  srcdirstrip=`echo "$(srcdir)" | sed 's/[].[^$$\\*|]/\\\\&/g'`
-am__nobase_strip = \
-  for p in $$list; do echo "$$p"; done | sed -e "s|$$srcdirstrip/||"
-am__nobase_list = $(am__nobase_strip_setup); \
-  for p in $$list; do echo "$$p $$p"; done | \
-  sed "s| $$srcdirstrip/| |;"' / .*\//!s/ .*/ ./; s,\( .*\)/[^/]*$$,\1,' | \
-  $(AWK) 'BEGIN { files["."] = "" } { files[$$2] = files[$$2] " " $$1; \
-    if (++n[$$2] == $(am__install_max)) \
-      { print $$2, files[$$2]; n[$$2] = 0; files[$$2] = "" } } \
-    END { for (dir in files) print dir, files[dir] }'
-am__base_list = \
-  sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
-  sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
-am__uninstall_files_from_dir = { \
-  test -z "$$files" \
-    || { test ! -d "$$dir" && test ! -f "$$dir" && test ! -r "$$dir"; } \
-    || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
-         $(am__cd) "$$dir" && rm -f $$files; }; \
-  }
 man1dir = $(mandir)/man1
 NROFF = nroff
 MANS = $(dist_man1_MANS)
@@ -301,6 +331,8 @@ EXEEXT = @EXEEXT@
 FGREP = @FGREP@
 GCC_CFLAGS = @GCC_CFLAGS@
 GCC_CXXFLAGS = @GCC_CXXFLAGS@
+GCOV_CFLAGS = @GCOV_CFLAGS@
+GCOV_LDFLAGS = @GCOV_LDFLAGS@
 GREP = @GREP@
 GTK_CFLAGS = @GTK_CFLAGS@
 GTK_LIBS = @GTK_LIBS@
@@ -424,10 +456,12 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
+toolsdir = $(libexecdir)/libinput
+bin_SCRIPTS = libinput-list-devices.compat libinput-debug-events.compat
 noinst_LTLIBRARIES = libshared.la
 AM_CPPFLAGS = -I$(top_srcdir)/include \
               -I$(top_srcdir)/src \
-              -I$(top_builddir)/src  # for libinput-version.h
+              -I$(top_builddir)/src # for libinput-version.h
 
 AM_CFLAGS = $(GCC_CFLAGS)
 AM_CXXFLAGS = $(GCC_CXXFLAGS)
@@ -435,31 +469,46 @@ libshared_la_SOURCES = \
 		       shared.c \
 		       shared.h
 
-libshared_la_CFLAGS = $(AM_CFLAGS) $(LIBEVDEV_CFLAGS)
-libshared_la_LIBADD = $(LIBEVDEV_LIBS)
-event_debug_SOURCES = event-debug.c
-event_debug_LDADD = ../src/libinput.la libshared.la $(LIBUDEV_LIBS) $(LIBEVDEV_LIBS)
-event_debug_LDFLAGS = -no-install
-event_debug_CFLAGS = $(AM_CFLAGS) $(LIBUDEV_CFLAGS) $(LIBEVDEV_CFLAGS)
+libshared_la_CFLAGS = $(AM_CFLAGS) $(LIBEVDEV_CFLAGS) $(LIBUDEV_CFLAGS) \
+		      -DLIBINPUT_TOOL_PATH="\"@libexecdir@/libinput\""
+
+libshared_la_LIBADD = $(LIBEVDEV_LIBS) $(LIBUDEV_LIBS) ../src/libinput.la
 ptraccel_debug_SOURCES = ptraccel-debug.c
 ptraccel_debug_LDADD = ../src/libfilter.la ../src/libinput.la
 ptraccel_debug_LDFLAGS = -no-install
-libinput_list_devices_SOURCES = libinput-list-devices.c
-libinput_list_devices_LDADD = ../src/libinput.la libshared.la $(LIBUDEV_LIBS)
-libinput_list_devices_CFLAGS = $(AM_CFLAGS) $(LIBUDEV_CFLAGS)
-dist_man1_MANS = libinput-list-devices.man libinput-debug-events.man
-libinput_debug_events_SOURCES = $(event_debug_SOURCES)
-libinput_debug_events_LDADD = $(event_debug_LDADD)
-libinput_debug_events_CFLAGS = $(AM_CFLAGS) $(event_debug_CFLAGS)
-@BUILD_EVENTGUI_TRUE@event_gui_SOURCES = event-gui.c
-@BUILD_EVENTGUI_TRUE@event_gui_LDADD = ../src/libinput.la libshared.la $(CAIRO_LIBS) $(GTK_LIBS) $(LIBUDEV_LIBS)
-@BUILD_EVENTGUI_TRUE@event_gui_CFLAGS = $(CAIRO_CFLAGS) $(GTK_CFLAGS) $(LIBUDEV_CFLAGS) $(AM_CFLAGS)
-@BUILD_EVENTGUI_TRUE@event_gui_LDFLAGS = -no-install
-EXTRA_DIST = make-ptraccel-graphs.sh
+libinput_SOURCES = libinput-tool.c
+libinput_LDADD = ../src/libinput.la libshared.la $(LIBUDEV_LIBS) $(LIBEVDEV_LIBS)
+libinput_CFLAGS = $(AM_CFLAGS) $(LIBUDEV_CFLAGS) $(LIBEVDEV_CFLAGS)
+dist_man1_MANS = libinput.1 libinput-list-devices.1 \
+	libinput-debug-events.1 libinput-measure.1 \
+	libinput-measure-touchpad-tap.1 $(am__append_2)
+libinput_list_devices_SOURCES = libinput-list-devices.c $(shared_sources)
+libinput_list_devices_LDADD = ../src/libinput.la libshared.la $(LIBUDEV_LIBS) $(LIBEVDEV_LIBS)
+libinput_list_devices_CFLAGS = $(AM_CFLAGS) $(LIBUDEV_CFLAGS) $(LIBEVDEV_CFLAGS)
+libinput_debug_events_SOURCES = libinput-debug-events.c $(shared_sources)
+libinput_debug_events_LDADD = ../src/libinput.la libshared.la $(LIBUDEV_LIBS) $(LIBEVDEV_LIBS)
+libinput_debug_events_CFLAGS = $(AM_CFLAGS) $(LIBUDEV_CFLAGS) $(LIBEVDEV_CFLAGS)
+libinput_measure_SOURCES = libinput-measure.c $(shared_sources)
+libinput_measure_LDADD = ../src/libinput.la libshared.la $(LIBUDEV_LIBS) $(LIBEVDEV_LIBS)
+libinput_measure_CFLAGS = $(AM_CFLAGS) $(LIBUDEV_CFLAGS) $(LIBEVDEV_CFLAGS) \
+		  -DLIBINPUT_TOOL_PATH="\"@libexecdir@/libinput\""
+
+libinput_measure_touchpad_tap_SOURCES = \
+		     libinput-measure-touchpad-tap.c
+
+libinput_measure_touchpad_tap_LDADD = ../src/libinput.la libshared.la $(LIBUDEV_LIBS) $(LIBEVDEV_LIBS)
+libinput_measure_touchpad_tap_CFLAGS = $(AM_CFLAGS) $(LIBUDEV_CFLAGS) $(LIBEVDEV_CFLAGS)
+@BUILD_DEBUG_GUI_TRUE@libinput_debug_gui_SOURCES = libinput-debug-gui.c
+@BUILD_DEBUG_GUI_TRUE@libinput_debug_gui_LDADD = ../src/libinput.la libshared.la $(CAIRO_LIBS) $(GTK_LIBS) $(LIBEVDEV_LIBS) $(LIBUDEV_LIBS)
+@BUILD_DEBUG_GUI_TRUE@libinput_debug_gui_CFLAGS = $(AM_CFLAGS) $(CAIRO_CFLAGS) $(GTK_CFLAGS) $(LIBEVDEV_CFLAGS) $(LIBUDEV_CFLAGS)
+EXTRA_DIST = make-ptraccel-graphs.sh install-compat-scripts.sh \
+	$(bin_SCRIPTS) $(dist_man1_MANS:.1=.man)
+SUFFIXES = .man
+CLEANFILES = *.1
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .c .lo .o .obj
+.SUFFIXES: .man .1 .c .lo .o .obj
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -561,26 +610,118 @@ clean-noinstPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
+install-toolsPROGRAMS: $(tools_PROGRAMS)
+	@$(NORMAL_INSTALL)
+	@list='$(tools_PROGRAMS)'; test -n "$(toolsdir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(toolsdir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(toolsdir)" || exit 1; \
+	fi; \
+	for p in $$list; do echo "$$p $$p"; done | \
+	sed 's/$(EXEEXT)$$//' | \
+	while read p p1; do if test -f $$p \
+	 || test -f $$p1 \
+	  ; then echo "$$p"; echo "$$p"; else :; fi; \
+	done | \
+	sed -e 'p;s,.*/,,;n;h' \
+	    -e 's|.*|.|' \
+	    -e 'p;x;s,.*/,,;s/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/' | \
+	sed 'N;N;N;s,\n, ,g' | \
+	$(AWK) 'BEGIN { files["."] = ""; dirs["."] = 1 } \
+	  { d=$$3; if (dirs[d] != 1) { print "d", d; dirs[d] = 1 } \
+	    if ($$2 == $$4) files[d] = files[d] " " $$1; \
+	    else { print "f", $$3 "/" $$4, $$1; } } \
+	  END { for (d in files) print "f", d, files[d] }' | \
+	while read type dir files; do \
+	    if test "$$dir" = .; then dir=; else dir=/$$dir; fi; \
+	    test -z "$$files" || { \
+	    echo " $(INSTALL_PROGRAM_ENV) $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL_PROGRAM) $$files '$(DESTDIR)$(toolsdir)$$dir'"; \
+	    $(INSTALL_PROGRAM_ENV) $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL_PROGRAM) $$files "$(DESTDIR)$(toolsdir)$$dir" || exit $$?; \
+	    } \
+	; done
 
-event-debug$(EXEEXT): $(event_debug_OBJECTS) $(event_debug_DEPENDENCIES) $(EXTRA_event_debug_DEPENDENCIES) 
-	@rm -f event-debug$(EXEEXT)
-	$(AM_V_CCLD)$(event_debug_LINK) $(event_debug_OBJECTS) $(event_debug_LDADD) $(LIBS)
+uninstall-toolsPROGRAMS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(tools_PROGRAMS)'; test -n "$(toolsdir)" || list=; \
+	files=`for p in $$list; do echo "$$p"; done | \
+	  sed -e 'h;s,^.*/,,;s/$(EXEEXT)$$//;$(transform)' \
+	      -e 's/$$/$(EXEEXT)/' \
+	`; \
+	test -n "$$list" || exit 0; \
+	echo " ( cd '$(DESTDIR)$(toolsdir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(toolsdir)" && rm -f $$files
 
-event-gui$(EXEEXT): $(event_gui_OBJECTS) $(event_gui_DEPENDENCIES) $(EXTRA_event_gui_DEPENDENCIES) 
-	@rm -f event-gui$(EXEEXT)
-	$(AM_V_CCLD)$(event_gui_LINK) $(event_gui_OBJECTS) $(event_gui_LDADD) $(LIBS)
+clean-toolsPROGRAMS:
+	@list='$(tools_PROGRAMS)'; test -n "$$list" || exit 0; \
+	echo " rm -f" $$list; \
+	rm -f $$list || exit $$?; \
+	test -n "$(EXEEXT)" || exit 0; \
+	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
+	echo " rm -f" $$list; \
+	rm -f $$list
+
+libinput$(EXEEXT): $(libinput_OBJECTS) $(libinput_DEPENDENCIES) $(EXTRA_libinput_DEPENDENCIES) 
+	@rm -f libinput$(EXEEXT)
+	$(AM_V_CCLD)$(libinput_LINK) $(libinput_OBJECTS) $(libinput_LDADD) $(LIBS)
 
 libinput-debug-events$(EXEEXT): $(libinput_debug_events_OBJECTS) $(libinput_debug_events_DEPENDENCIES) $(EXTRA_libinput_debug_events_DEPENDENCIES) 
 	@rm -f libinput-debug-events$(EXEEXT)
 	$(AM_V_CCLD)$(libinput_debug_events_LINK) $(libinput_debug_events_OBJECTS) $(libinput_debug_events_LDADD) $(LIBS)
 
+libinput-debug-gui$(EXEEXT): $(libinput_debug_gui_OBJECTS) $(libinput_debug_gui_DEPENDENCIES) $(EXTRA_libinput_debug_gui_DEPENDENCIES) 
+	@rm -f libinput-debug-gui$(EXEEXT)
+	$(AM_V_CCLD)$(libinput_debug_gui_LINK) $(libinput_debug_gui_OBJECTS) $(libinput_debug_gui_LDADD) $(LIBS)
+
 libinput-list-devices$(EXEEXT): $(libinput_list_devices_OBJECTS) $(libinput_list_devices_DEPENDENCIES) $(EXTRA_libinput_list_devices_DEPENDENCIES) 
 	@rm -f libinput-list-devices$(EXEEXT)
 	$(AM_V_CCLD)$(libinput_list_devices_LINK) $(libinput_list_devices_OBJECTS) $(libinput_list_devices_LDADD) $(LIBS)
 
+libinput-measure$(EXEEXT): $(libinput_measure_OBJECTS) $(libinput_measure_DEPENDENCIES) $(EXTRA_libinput_measure_DEPENDENCIES) 
+	@rm -f libinput-measure$(EXEEXT)
+	$(AM_V_CCLD)$(libinput_measure_LINK) $(libinput_measure_OBJECTS) $(libinput_measure_LDADD) $(LIBS)
+
+libinput-measure-touchpad-tap$(EXEEXT): $(libinput_measure_touchpad_tap_OBJECTS) $(libinput_measure_touchpad_tap_DEPENDENCIES) $(EXTRA_libinput_measure_touchpad_tap_DEPENDENCIES) 
+	@rm -f libinput-measure-touchpad-tap$(EXEEXT)
+	$(AM_V_CCLD)$(libinput_measure_touchpad_tap_LINK) $(libinput_measure_touchpad_tap_OBJECTS) $(libinput_measure_touchpad_tap_LDADD) $(LIBS)
+
 ptraccel-debug$(EXEEXT): $(ptraccel_debug_OBJECTS) $(ptraccel_debug_DEPENDENCIES) $(EXTRA_ptraccel_debug_DEPENDENCIES) 
 	@rm -f ptraccel-debug$(EXEEXT)
 	$(AM_V_CCLD)$(ptraccel_debug_LINK) $(ptraccel_debug_OBJECTS) $(ptraccel_debug_LDADD) $(LIBS)
+install-binSCRIPTS: $(bin_SCRIPTS)
+	@$(NORMAL_INSTALL)
+	@list='$(bin_SCRIPTS)'; test -n "$(bindir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(bindir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(bindir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  if test -f "$$d$$p"; then echo "$$d$$p"; echo "$$p"; else :; fi; \
+	done | \
+	sed -e 'p;s,.*/,,;n' \
+	    -e 'h;s|.*|.|' \
+	    -e 'p;x;s,.*/,,;$(transform)' | sed 'N;N;N;s,\n, ,g' | \
+	$(AWK) 'BEGIN { files["."] = ""; dirs["."] = 1; } \
+	  { d=$$3; if (dirs[d] != 1) { print "d", d; dirs[d] = 1 } \
+	    if ($$2 == $$4) { files[d] = files[d] " " $$1; \
+	      if (++n[d] == $(am__install_max)) { \
+		print "f", d, files[d]; n[d] = 0; files[d] = "" } } \
+	    else { print "f", d "/" $$4, $$1 } } \
+	  END { for (d in files) print "f", d, files[d] }' | \
+	while read type dir files; do \
+	     if test "$$dir" = .; then dir=; else dir=/$$dir; fi; \
+	     test -z "$$files" || { \
+	       echo " $(INSTALL_SCRIPT) $$files '$(DESTDIR)$(bindir)$$dir'"; \
+	       $(INSTALL_SCRIPT) $$files "$(DESTDIR)$(bindir)$$dir" || exit $$?; \
+	     } \
+	; done
+
+uninstall-binSCRIPTS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(bin_SCRIPTS)'; test -n "$(bindir)" || exit 0; \
+	files=`for p in $$list; do echo "$$p"; done | \
+	       sed -e 's,.*/,,;$(transform)'`; \
+	dir='$(DESTDIR)$(bindir)'; $(am__uninstall_files_from_dir)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -588,10 +729,12 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/event_debug-event-debug.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/event_gui-event-gui.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libinput_debug_events-event-debug.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libinput-libinput-tool.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libinput_debug_events-libinput-debug-events.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libinput_debug_gui-libinput-debug-gui.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libinput_list_devices-libinput-list-devices.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libinput_measure-libinput-measure.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libinput_measure_touchpad_tap-libinput-measure-touchpad-tap.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libshared_la-shared.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ptraccel-debug.Po@am__quote@
 
@@ -623,47 +766,47 @@ libshared_la-shared.lo: shared.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libshared_la_CFLAGS) $(CFLAGS) -c -o libshared_la-shared.lo `test -f 'shared.c' || echo '$(srcdir)/'`shared.c
 
-event_debug-event-debug.o: event-debug.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(event_debug_CFLAGS) $(CFLAGS) -MT event_debug-event-debug.o -MD -MP -MF $(DEPDIR)/event_debug-event-debug.Tpo -c -o event_debug-event-debug.o `test -f 'event-debug.c' || echo '$(srcdir)/'`event-debug.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/event_debug-event-debug.Tpo $(DEPDIR)/event_debug-event-debug.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='event-debug.c' object='event_debug-event-debug.o' libtool=no @AMDEPBACKSLASH@
+libinput-libinput-tool.o: libinput-tool.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_CFLAGS) $(CFLAGS) -MT libinput-libinput-tool.o -MD -MP -MF $(DEPDIR)/libinput-libinput-tool.Tpo -c -o libinput-libinput-tool.o `test -f 'libinput-tool.c' || echo '$(srcdir)/'`libinput-tool.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libinput-libinput-tool.Tpo $(DEPDIR)/libinput-libinput-tool.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='libinput-tool.c' object='libinput-libinput-tool.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(event_debug_CFLAGS) $(CFLAGS) -c -o event_debug-event-debug.o `test -f 'event-debug.c' || echo '$(srcdir)/'`event-debug.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_CFLAGS) $(CFLAGS) -c -o libinput-libinput-tool.o `test -f 'libinput-tool.c' || echo '$(srcdir)/'`libinput-tool.c
 
-event_debug-event-debug.obj: event-debug.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(event_debug_CFLAGS) $(CFLAGS) -MT event_debug-event-debug.obj -MD -MP -MF $(DEPDIR)/event_debug-event-debug.Tpo -c -o event_debug-event-debug.obj `if test -f 'event-debug.c'; then $(CYGPATH_W) 'event-debug.c'; else $(CYGPATH_W) '$(srcdir)/event-debug.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/event_debug-event-debug.Tpo $(DEPDIR)/event_debug-event-debug.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='event-debug.c' object='event_debug-event-debug.obj' libtool=no @AMDEPBACKSLASH@
+libinput-libinput-tool.obj: libinput-tool.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_CFLAGS) $(CFLAGS) -MT libinput-libinput-tool.obj -MD -MP -MF $(DEPDIR)/libinput-libinput-tool.Tpo -c -o libinput-libinput-tool.obj `if test -f 'libinput-tool.c'; then $(CYGPATH_W) 'libinput-tool.c'; else $(CYGPATH_W) '$(srcdir)/libinput-tool.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libinput-libinput-tool.Tpo $(DEPDIR)/libinput-libinput-tool.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='libinput-tool.c' object='libinput-libinput-tool.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(event_debug_CFLAGS) $(CFLAGS) -c -o event_debug-event-debug.obj `if test -f 'event-debug.c'; then $(CYGPATH_W) 'event-debug.c'; else $(CYGPATH_W) '$(srcdir)/event-debug.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_CFLAGS) $(CFLAGS) -c -o libinput-libinput-tool.obj `if test -f 'libinput-tool.c'; then $(CYGPATH_W) 'libinput-tool.c'; else $(CYGPATH_W) '$(srcdir)/libinput-tool.c'; fi`
 
-event_gui-event-gui.o: event-gui.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(event_gui_CFLAGS) $(CFLAGS) -MT event_gui-event-gui.o -MD -MP -MF $(DEPDIR)/event_gui-event-gui.Tpo -c -o event_gui-event-gui.o `test -f 'event-gui.c' || echo '$(srcdir)/'`event-gui.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/event_gui-event-gui.Tpo $(DEPDIR)/event_gui-event-gui.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='event-gui.c' object='event_gui-event-gui.o' libtool=no @AMDEPBACKSLASH@
+libinput_debug_events-libinput-debug-events.o: libinput-debug-events.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_debug_events_CFLAGS) $(CFLAGS) -MT libinput_debug_events-libinput-debug-events.o -MD -MP -MF $(DEPDIR)/libinput_debug_events-libinput-debug-events.Tpo -c -o libinput_debug_events-libinput-debug-events.o `test -f 'libinput-debug-events.c' || echo '$(srcdir)/'`libinput-debug-events.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libinput_debug_events-libinput-debug-events.Tpo $(DEPDIR)/libinput_debug_events-libinput-debug-events.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='libinput-debug-events.c' object='libinput_debug_events-libinput-debug-events.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(event_gui_CFLAGS) $(CFLAGS) -c -o event_gui-event-gui.o `test -f 'event-gui.c' || echo '$(srcdir)/'`event-gui.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_debug_events_CFLAGS) $(CFLAGS) -c -o libinput_debug_events-libinput-debug-events.o `test -f 'libinput-debug-events.c' || echo '$(srcdir)/'`libinput-debug-events.c
 
-event_gui-event-gui.obj: event-gui.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(event_gui_CFLAGS) $(CFLAGS) -MT event_gui-event-gui.obj -MD -MP -MF $(DEPDIR)/event_gui-event-gui.Tpo -c -o event_gui-event-gui.obj `if test -f 'event-gui.c'; then $(CYGPATH_W) 'event-gui.c'; else $(CYGPATH_W) '$(srcdir)/event-gui.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/event_gui-event-gui.Tpo $(DEPDIR)/event_gui-event-gui.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='event-gui.c' object='event_gui-event-gui.obj' libtool=no @AMDEPBACKSLASH@
+libinput_debug_events-libinput-debug-events.obj: libinput-debug-events.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_debug_events_CFLAGS) $(CFLAGS) -MT libinput_debug_events-libinput-debug-events.obj -MD -MP -MF $(DEPDIR)/libinput_debug_events-libinput-debug-events.Tpo -c -o libinput_debug_events-libinput-debug-events.obj `if test -f 'libinput-debug-events.c'; then $(CYGPATH_W) 'libinput-debug-events.c'; else $(CYGPATH_W) '$(srcdir)/libinput-debug-events.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libinput_debug_events-libinput-debug-events.Tpo $(DEPDIR)/libinput_debug_events-libinput-debug-events.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='libinput-debug-events.c' object='libinput_debug_events-libinput-debug-events.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(event_gui_CFLAGS) $(CFLAGS) -c -o event_gui-event-gui.obj `if test -f 'event-gui.c'; then $(CYGPATH_W) 'event-gui.c'; else $(CYGPATH_W) '$(srcdir)/event-gui.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_debug_events_CFLAGS) $(CFLAGS) -c -o libinput_debug_events-libinput-debug-events.obj `if test -f 'libinput-debug-events.c'; then $(CYGPATH_W) 'libinput-debug-events.c'; else $(CYGPATH_W) '$(srcdir)/libinput-debug-events.c'; fi`
 
-libinput_debug_events-event-debug.o: event-debug.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_debug_events_CFLAGS) $(CFLAGS) -MT libinput_debug_events-event-debug.o -MD -MP -MF $(DEPDIR)/libinput_debug_events-event-debug.Tpo -c -o libinput_debug_events-event-debug.o `test -f 'event-debug.c' || echo '$(srcdir)/'`event-debug.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libinput_debug_events-event-debug.Tpo $(DEPDIR)/libinput_debug_events-event-debug.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='event-debug.c' object='libinput_debug_events-event-debug.o' libtool=no @AMDEPBACKSLASH@
+libinput_debug_gui-libinput-debug-gui.o: libinput-debug-gui.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_debug_gui_CFLAGS) $(CFLAGS) -MT libinput_debug_gui-libinput-debug-gui.o -MD -MP -MF $(DEPDIR)/libinput_debug_gui-libinput-debug-gui.Tpo -c -o libinput_debug_gui-libinput-debug-gui.o `test -f 'libinput-debug-gui.c' || echo '$(srcdir)/'`libinput-debug-gui.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libinput_debug_gui-libinput-debug-gui.Tpo $(DEPDIR)/libinput_debug_gui-libinput-debug-gui.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='libinput-debug-gui.c' object='libinput_debug_gui-libinput-debug-gui.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_debug_events_CFLAGS) $(CFLAGS) -c -o libinput_debug_events-event-debug.o `test -f 'event-debug.c' || echo '$(srcdir)/'`event-debug.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_debug_gui_CFLAGS) $(CFLAGS) -c -o libinput_debug_gui-libinput-debug-gui.o `test -f 'libinput-debug-gui.c' || echo '$(srcdir)/'`libinput-debug-gui.c
 
-libinput_debug_events-event-debug.obj: event-debug.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_debug_events_CFLAGS) $(CFLAGS) -MT libinput_debug_events-event-debug.obj -MD -MP -MF $(DEPDIR)/libinput_debug_events-event-debug.Tpo -c -o libinput_debug_events-event-debug.obj `if test -f 'event-debug.c'; then $(CYGPATH_W) 'event-debug.c'; else $(CYGPATH_W) '$(srcdir)/event-debug.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libinput_debug_events-event-debug.Tpo $(DEPDIR)/libinput_debug_events-event-debug.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='event-debug.c' object='libinput_debug_events-event-debug.obj' libtool=no @AMDEPBACKSLASH@
+libinput_debug_gui-libinput-debug-gui.obj: libinput-debug-gui.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_debug_gui_CFLAGS) $(CFLAGS) -MT libinput_debug_gui-libinput-debug-gui.obj -MD -MP -MF $(DEPDIR)/libinput_debug_gui-libinput-debug-gui.Tpo -c -o libinput_debug_gui-libinput-debug-gui.obj `if test -f 'libinput-debug-gui.c'; then $(CYGPATH_W) 'libinput-debug-gui.c'; else $(CYGPATH_W) '$(srcdir)/libinput-debug-gui.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libinput_debug_gui-libinput-debug-gui.Tpo $(DEPDIR)/libinput_debug_gui-libinput-debug-gui.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='libinput-debug-gui.c' object='libinput_debug_gui-libinput-debug-gui.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_debug_events_CFLAGS) $(CFLAGS) -c -o libinput_debug_events-event-debug.obj `if test -f 'event-debug.c'; then $(CYGPATH_W) 'event-debug.c'; else $(CYGPATH_W) '$(srcdir)/event-debug.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_debug_gui_CFLAGS) $(CFLAGS) -c -o libinput_debug_gui-libinput-debug-gui.obj `if test -f 'libinput-debug-gui.c'; then $(CYGPATH_W) 'libinput-debug-gui.c'; else $(CYGPATH_W) '$(srcdir)/libinput-debug-gui.c'; fi`
 
 libinput_list_devices-libinput-list-devices.o: libinput-list-devices.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_list_devices_CFLAGS) $(CFLAGS) -MT libinput_list_devices-libinput-list-devices.o -MD -MP -MF $(DEPDIR)/libinput_list_devices-libinput-list-devices.Tpo -c -o libinput_list_devices-libinput-list-devices.o `test -f 'libinput-list-devices.c' || echo '$(srcdir)/'`libinput-list-devices.c
@@ -678,6 +821,34 @@ libinput_list_devices-libinput-list-devices.obj: libinput-list-devices.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='libinput-list-devices.c' object='libinput_list_devices-libinput-list-devices.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_list_devices_CFLAGS) $(CFLAGS) -c -o libinput_list_devices-libinput-list-devices.obj `if test -f 'libinput-list-devices.c'; then $(CYGPATH_W) 'libinput-list-devices.c'; else $(CYGPATH_W) '$(srcdir)/libinput-list-devices.c'; fi`
+
+libinput_measure-libinput-measure.o: libinput-measure.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_measure_CFLAGS) $(CFLAGS) -MT libinput_measure-libinput-measure.o -MD -MP -MF $(DEPDIR)/libinput_measure-libinput-measure.Tpo -c -o libinput_measure-libinput-measure.o `test -f 'libinput-measure.c' || echo '$(srcdir)/'`libinput-measure.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libinput_measure-libinput-measure.Tpo $(DEPDIR)/libinput_measure-libinput-measure.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='libinput-measure.c' object='libinput_measure-libinput-measure.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_measure_CFLAGS) $(CFLAGS) -c -o libinput_measure-libinput-measure.o `test -f 'libinput-measure.c' || echo '$(srcdir)/'`libinput-measure.c
+
+libinput_measure-libinput-measure.obj: libinput-measure.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_measure_CFLAGS) $(CFLAGS) -MT libinput_measure-libinput-measure.obj -MD -MP -MF $(DEPDIR)/libinput_measure-libinput-measure.Tpo -c -o libinput_measure-libinput-measure.obj `if test -f 'libinput-measure.c'; then $(CYGPATH_W) 'libinput-measure.c'; else $(CYGPATH_W) '$(srcdir)/libinput-measure.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libinput_measure-libinput-measure.Tpo $(DEPDIR)/libinput_measure-libinput-measure.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='libinput-measure.c' object='libinput_measure-libinput-measure.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_measure_CFLAGS) $(CFLAGS) -c -o libinput_measure-libinput-measure.obj `if test -f 'libinput-measure.c'; then $(CYGPATH_W) 'libinput-measure.c'; else $(CYGPATH_W) '$(srcdir)/libinput-measure.c'; fi`
+
+libinput_measure_touchpad_tap-libinput-measure-touchpad-tap.o: libinput-measure-touchpad-tap.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_measure_touchpad_tap_CFLAGS) $(CFLAGS) -MT libinput_measure_touchpad_tap-libinput-measure-touchpad-tap.o -MD -MP -MF $(DEPDIR)/libinput_measure_touchpad_tap-libinput-measure-touchpad-tap.Tpo -c -o libinput_measure_touchpad_tap-libinput-measure-touchpad-tap.o `test -f 'libinput-measure-touchpad-tap.c' || echo '$(srcdir)/'`libinput-measure-touchpad-tap.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libinput_measure_touchpad_tap-libinput-measure-touchpad-tap.Tpo $(DEPDIR)/libinput_measure_touchpad_tap-libinput-measure-touchpad-tap.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='libinput-measure-touchpad-tap.c' object='libinput_measure_touchpad_tap-libinput-measure-touchpad-tap.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_measure_touchpad_tap_CFLAGS) $(CFLAGS) -c -o libinput_measure_touchpad_tap-libinput-measure-touchpad-tap.o `test -f 'libinput-measure-touchpad-tap.c' || echo '$(srcdir)/'`libinput-measure-touchpad-tap.c
+
+libinput_measure_touchpad_tap-libinput-measure-touchpad-tap.obj: libinput-measure-touchpad-tap.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_measure_touchpad_tap_CFLAGS) $(CFLAGS) -MT libinput_measure_touchpad_tap-libinput-measure-touchpad-tap.obj -MD -MP -MF $(DEPDIR)/libinput_measure_touchpad_tap-libinput-measure-touchpad-tap.Tpo -c -o libinput_measure_touchpad_tap-libinput-measure-touchpad-tap.obj `if test -f 'libinput-measure-touchpad-tap.c'; then $(CYGPATH_W) 'libinput-measure-touchpad-tap.c'; else $(CYGPATH_W) '$(srcdir)/libinput-measure-touchpad-tap.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libinput_measure_touchpad_tap-libinput-measure-touchpad-tap.Tpo $(DEPDIR)/libinput_measure_touchpad_tap-libinput-measure-touchpad-tap.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='libinput-measure-touchpad-tap.c' object='libinput_measure_touchpad_tap-libinput-measure-touchpad-tap.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_measure_touchpad_tap_CFLAGS) $(CFLAGS) -c -o libinput_measure_touchpad_tap-libinput-measure-touchpad-tap.obj `if test -f 'libinput-measure-touchpad-tap.c'; then $(CYGPATH_W) 'libinput-measure-touchpad-tap.c'; else $(CYGPATH_W) '$(srcdir)/libinput-measure-touchpad-tap.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -810,9 +981,9 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(MANS)
+all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(SCRIPTS) $(MANS)
 installdirs:
-	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(toolsdir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -837,6 +1008,7 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -848,7 +1020,8 @@ maintainer-clean-generic:
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-generic clean-libtool \
-	clean-noinstLTLIBRARIES clean-noinstPROGRAMS mostlyclean-am
+	clean-noinstLTLIBRARIES clean-noinstPROGRAMS \
+	clean-toolsPROGRAMS mostlyclean-am
 
 distclean: distclean-am
 	-rm -rf ./$(DEPDIR)
@@ -868,14 +1041,15 @@ info: info-am
 
 info-am:
 
-install-data-am: install-man
+install-data-am: install-man install-toolsPROGRAMS
 
 install-dvi: install-dvi-am
 
 install-dvi-am:
 
-install-exec-am: install-binPROGRAMS
-
+install-exec-am: install-binPROGRAMS install-binSCRIPTS
+	@$(NORMAL_INSTALL)
+	$(MAKE) $(AM_MAKEFLAGS) install-exec-hook
 install-html: install-html-am
 
 install-html-am:
@@ -914,30 +1088,44 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS uninstall-man
+uninstall-am: uninstall-binPROGRAMS uninstall-binSCRIPTS \
+	uninstall-local uninstall-man uninstall-toolsPROGRAMS
 
 uninstall-man: uninstall-man1
 
-.MAKE: install-am install-strip
+.MAKE: install-am install-exec-am install-strip
 
 .PHONY: CTAGS GTAGS TAGS all all-am check check-am clean \
 	clean-binPROGRAMS clean-generic clean-libtool \
-	clean-noinstLTLIBRARIES clean-noinstPROGRAMS cscopelist-am \
-	ctags ctags-am distclean distclean-compile distclean-generic \
-	distclean-libtool distclean-tags distdir dvi dvi-am html \
-	html-am info info-am install install-am install-binPROGRAMS \
+	clean-noinstLTLIBRARIES clean-noinstPROGRAMS \
+	clean-toolsPROGRAMS cscopelist-am ctags ctags-am distclean \
+	distclean-compile distclean-generic distclean-libtool \
+	distclean-tags distdir dvi dvi-am html html-am info info-am \
+	install install-am install-binPROGRAMS install-binSCRIPTS \
 	install-data install-data-am install-dvi install-dvi-am \
-	install-exec install-exec-am install-html install-html-am \
-	install-info install-info-am install-man install-man1 \
-	install-pdf install-pdf-am install-ps install-ps-am \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
-	pdf pdf-am ps ps-am tags tags-am uninstall uninstall-am \
-	uninstall-binPROGRAMS uninstall-man uninstall-man1
+	install-exec install-exec-am install-exec-hook install-html \
+	install-html-am install-info install-info-am install-man \
+	install-man1 install-pdf install-pdf-am install-ps \
+	install-ps-am install-strip install-toolsPROGRAMS installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	tags tags-am uninstall uninstall-am uninstall-binPROGRAMS \
+	uninstall-binSCRIPTS uninstall-local uninstall-man \
+	uninstall-man1 uninstall-toolsPROGRAMS
 
 .PRECIOUS: Makefile
 
+
+install-exec-hook:
+	(cd $(DESTDIR)$(bindir) && mv libinput-list-devices.compat libinput-list-devices)
+	(cd $(DESTDIR)$(bindir) && mv libinput-debug-events.compat libinput-debug-events)
+
+uninstall-local:
+	rm -f $(DESTDIR)$(bindir)/libinput-list-devices
+	rm -f $(DESTDIR)$(bindir)/libinput-debug-events
+.man.1: 
+	$(AM_V_GEN)$(SED) -e 's|\@LIBINPUT_VERSION\@|$(PACKAGE_VERSION)|' < $< > $@
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

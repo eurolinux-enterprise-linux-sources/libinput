@@ -1,23 +1,25 @@
-From 8cfe1cc6bd596166cdcbe2cca747900cf72a01af Mon Sep 17 00:00:00 2001
+From 6889061775d63c23c1503e162e570ba74c1c0dab Mon Sep 17 00:00:00 2001
 From: Peter Hutterer <peter.hutterer@who-t.net>
 Date: Tue, 14 Mar 2017 10:49:18 +1000
-Subject: [PATCH 2/6] RHEL: test: default to a single job only on RHEL
+Subject: [PATCH libinput] RHEL: test: default to a single job only on RHEL
 
 Without UI_GET_SYSNAME we can't rely on the uinput device path when
 creating devices in parallel.
 
 RHEL patch - do not upstream
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 ---
  test/litest.c | 6 +++++-
  1 file changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/test/litest.c b/test/litest.c
-index ff9df1c..7205d08 100644
+index 497b28af..f2098d2c 100644
 --- a/test/litest.c
 +++ b/test/litest.c
-@@ -60,7 +60,11 @@
- #define UDEV_TEST_DEVICE_RULE_FILE UDEV_RULES_D \
- 	"/91-litest-test-device-REMOVEME.rules"
+@@ -63,7 +63,11 @@
+ #define UDEV_DEVICE_GROUPS_FILE UDEV_RULES_D \
+ 	"/80-libinput-device-groups-litest-XXXXXX.rules"
  
 -static int jobs = 8;
 +/* We don't have UI_GET_SYSNAME on RHEL7 so running in parallel gets the
@@ -29,5 +31,5 @@ index ff9df1c..7205d08 100644
  static int verbose = 0;
  const char *filter_test = NULL;
 -- 
-1.8.3.1
+2.13.6
 

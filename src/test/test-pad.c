@@ -53,6 +53,72 @@ START_TEST(pad_no_cap)
 }
 END_TEST
 
+START_TEST(pad_time)
+{
+	struct litest_device *dev = litest_current_device();
+	struct libinput *li = dev->libinput;
+	struct libinput_event *ev;
+	struct libinput_event_tablet_pad *pev;
+	unsigned int code;
+	uint64_t time, time_usec, oldtime;
+
+	litest_drain_events(li);
+
+	for (code = BTN_0; code < KEY_MAX; code++) {
+		if (!libevdev_has_event_code(dev->evdev, EV_KEY, code))
+			continue;
+
+		litest_button_click(dev, code, 1);
+		litest_button_click(dev, code, 0);
+		libinput_dispatch(li);
+
+		switch (code) {
+		case BTN_STYLUS:
+			litest_assert_empty_queue(li);
+			continue;
+		default:
+			break;
+		}
+
+		break;
+	}
+
+	ev = libinput_get_event(li);
+	pev = litest_is_pad_button_event(ev,
+					 0,
+					 LIBINPUT_BUTTON_STATE_PRESSED);
+	time = libinput_event_tablet_pad_get_time(pev);
+	time_usec = libinput_event_tablet_pad_get_time_usec(pev);
+
+	ck_assert(time != 0);
+	ck_assert(time == time_usec/1000);
+
+	libinput_event_destroy(ev);
+
+	litest_drain_events(li);
+	msleep(10);
+
+	litest_button_click(dev, code, 1);
+	litest_button_click(dev, code, 0);
+	libinput_dispatch(li);
+
+	ev = libinput_get_event(li);
+	pev = litest_is_pad_button_event(ev,
+					 0,
+					 LIBINPUT_BUTTON_STATE_PRESSED);
+
+	oldtime = time;
+	time = libinput_event_tablet_pad_get_time(pev);
+	time_usec = libinput_event_tablet_pad_get_time_usec(pev);
+
+	ck_assert(time > oldtime);
+	ck_assert(time != 0);
+	ck_assert(time == time_usec/1000);
+
+	libinput_event_destroy(ev);
+}
+END_TEST
+
 START_TEST(pad_num_buttons)
 {
 	struct litest_device *dev = litest_current_device();
@@ -123,6 +189,68 @@ START_TEST(pad_button)
 }
 END_TEST
 
+START_TEST(pad_button_mode_groups)
+{
+	struct litest_device *dev = litest_current_device();
+	struct libinput *li = dev->libinput;
+	unsigned int code;
+	unsigned int expected_number = 0;
+	struct libinput_event *ev;
+	struct libinput_event_tablet_pad *pev;
+
+	litest_drain_events(li);
+
+	for (code = BTN_0; code < KEY_MAX; code++) {
+		unsigned int mode, index;
+		struct libinput_tablet_pad_mode_group *group;
+
+		if (!libevdev_has_event_code(dev->evdev, EV_KEY, code))
+			continue;
+
+		litest_button_click(dev, code, 1);
+		litest_button_click(dev, code, 0);
+		libinput_dispatch(li);
+
+		switch (code) {
+		case BTN_STYLUS:
+			litest_assert_empty_queue(li);
+			continue;
+		default:
+			break;
+		}
+
+		ev = libinput_get_event(li);
+		pev = litest_is_pad_button_event(ev,
+						 expected_number,
+						 LIBINPUT_BUTTON_STATE_PRESSED);
+
+		/* litest virtual devices don't have modes */
+		mode = libinput_event_tablet_pad_get_mode(pev);
+		ck_assert_int_eq(mode, 0);
+		group = libinput_event_tablet_pad_get_mode_group(pev);
+		index = libinput_tablet_pad_mode_group_get_index(group);
+		ck_assert_int_eq(index, 0);
+
+		libinput_event_destroy(ev);
+
+		ev = libinput_get_event(li);
+		pev = litest_is_pad_button_event(ev,
+						 expected_number,
+						 LIBINPUT_BUTTON_STATE_RELEASED);
+		mode = libinput_event_tablet_pad_get_mode(pev);
+		ck_assert_int_eq(mode, 0);
+		group = libinput_event_tablet_pad_get_mode_group(pev);
+		index = libinput_tablet_pad_mode_group_get_index(group);
+		ck_assert_int_eq(index, 0);
+		libinput_event_destroy(ev);
+
+		expected_number++;
+	}
+
+	litest_assert_empty_queue(li);
+}
+END_TEST
+
 START_TEST(pad_has_ring)
 {
 	struct litest_device *dev = litest_current_device();
@@ -142,6 +270,9 @@ START_TEST(pad_ring)
 	struct libinput_event_tablet_pad *pev;
 	int val;
 	double degrees, expected;
+	int min, max;
+	int step_size;
+	int nevents = 0;
 
 	litest_pad_ring_start(dev, 10);
 
@@ -150,11 +281,28 @@ START_TEST(pad_ring)
 	/* Wacom's 0 value is at 275 degrees */
 	expected = 270;
 
-	for (val = 0; val < 100; val += 10) {
+	min = libevdev_get_abs_minimum(dev->evdev, ABS_WHEEL);
+	max = libevdev_get_abs_maximum(dev->evdev, ABS_WHEEL);
+	step_size = 360/(max - min + 1);
+
+	/* This is a bit strange because we rely on kernel filtering here.
+	   The litest_*() functions take a percentage, but mapping this to
+	   the pads 72 or 36 range pad ranges is lossy and a bit
+	   unpredictable. So instead we increase by a small percentage,
+	   expecting *most* events to be filtered by the kernel because they
+	   resolve to the same integer value as the previous event. Whenever
+	   an event gets through, we expect that to be the next integer
+	   value in the range and thus the next step on the circle.
+	 */
+	for (val = 0; val < 100.0; val += 1) {
 		litest_pad_ring_change(dev, val);
 		libinput_dispatch(li);
 
 		ev = libinput_get_event(li);
+		if (!ev)
+			continue;
+
+		nevents++;
 		pev = litest_is_pad_ring_event(ev,
 					       0,
 					       LIBINPUT_TABLET_PAD_RING_SOURCE_FINGER);
@@ -163,14 +311,13 @@ START_TEST(pad_ring)
 		ck_assert_double_ge(degrees, 0.0);
 		ck_assert_double_lt(degrees, 360.0);
 
-		/* rounding errors, mostly caused by small physical range */
-		ck_assert_double_ge(degrees, expected - 2);
-		ck_assert_double_le(degrees, expected + 2);
+		ck_assert_double_eq(degrees, expected);
 
 		libinput_event_destroy(ev);
-
-		expected = fmod(degrees + 36, 360);
+		expected = fmod(degrees + step_size, 360);
 	}
+
+	ck_assert_int_eq(nevents, 360/step_size - 1);
 
 	litest_pad_ring_end(dev);
 }
@@ -637,8 +784,11 @@ litest_setup_tests_pad(void)
 	litest_add("pad:cap", pad_cap, LITEST_TABLET_PAD, LITEST_ANY);
 	litest_add("pad:cap", pad_no_cap, LITEST_ANY, LITEST_TABLET_PAD);
 
+	litest_add("pad:time", pad_time, LITEST_TABLET_PAD, LITEST_ANY);
+
 	litest_add("pad:button", pad_num_buttons, LITEST_TABLET_PAD, LITEST_ANY);
 	litest_add("pad:button", pad_button, LITEST_TABLET_PAD, LITEST_ANY);
+	litest_add("pad:button", pad_button_mode_groups, LITEST_TABLET_PAD, LITEST_ANY);
 
 	litest_add("pad:ring", pad_has_ring, LITEST_RING, LITEST_ANY);
 	litest_add("pad:ring", pad_ring, LITEST_RING, LITEST_ANY);

@@ -150,13 +150,13 @@ am_libinput_util_la_OBJECTS = libinput_util_la-libinput-util.lo
 libinput_util_la_OBJECTS = $(am_libinput_util_la_OBJECTS)
 libinput_util_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
-	$(libinput_util_la_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
-	-o $@
+	$(libinput_util_la_CFLAGS) $(CFLAGS) \
+	$(libinput_util_la_LDFLAGS) $(LDFLAGS) -o $@
 am__DEPENDENCIES_1 =
 libinput_la_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) libinput-util.la
 am_libinput_la_OBJECTS = libinput_la-libinput.lo libinput_la-evdev.lo \
-	libinput_la-evdev-middle-button.lo \
+	libinput_la-evdev-lid.lo libinput_la-evdev-middle-button.lo \
 	libinput_la-evdev-mt-touchpad.lo \
 	libinput_la-evdev-mt-touchpad-tap.lo \
 	libinput_la-evdev-mt-touchpad-buttons.lo \
@@ -277,6 +277,8 @@ EXEEXT = @EXEEXT@
 FGREP = @FGREP@
 GCC_CFLAGS = @GCC_CFLAGS@
 GCC_CXXFLAGS = @GCC_CXXFLAGS@
+GCOV_CFLAGS = @GCOV_CFLAGS@
+GCOV_LDFLAGS = @GCOV_LDFLAGS@
 GREP = @GREP@
 GTK_CFLAGS = @GTK_CFLAGS@
 GTK_LIBS = @GTK_LIBS@
@@ -413,6 +415,7 @@ libinput_la_SOURCES = \
 	libinput-private.h		\
 	evdev.c				\
 	evdev.h				\
+	evdev-lid.c			\
 	evdev-middle-button.c		\
 	evdev-mt-touchpad.c		\
 	evdev-mt-touchpad.h		\
@@ -434,7 +437,8 @@ libinput_la_SOURCES = \
 	udev-seat.h			\
 	timer.c				\
 	timer.h				\
-	../include/linux/input.h
+	../include/linux/input.h	\
+	../include/linux/input-event-codes.h
 
 libinput_la_LIBADD = $(MTDEV_LIBS) \
 		     $(LIBUDEV_LIBS) \
@@ -442,12 +446,17 @@ libinput_la_LIBADD = $(MTDEV_LIBS) \
 		     $(LIBWACOM_LIBS) \
 		     libinput-util.la
 
+libinput_la_LDFLAGS = $(GCOV_LDFLAGS) \
+		      -version-info $(LIBINPUT_LT_VERSION) -shared \
+		      -Wl,--version-script=$(srcdir)/libinput.sym
+
 libinput_la_CFLAGS = -I$(top_srcdir)/include \
 		     $(MTDEV_CFLAGS)	\
 		     $(LIBUDEV_CFLAGS)	\
 		     $(LIBEVDEV_CFLAGS)	\
 		     $(LIBWACOM_CFLAGS) \
-		     $(GCC_CFLAGS)
+		     $(GCC_CFLAGS) \
+		     $(GCOV_CFLAGS)
 
 EXTRA_libinput_la_DEPENDENCIES = $(srcdir)/libinput.sym
 libinput_util_la_SOURCES = \
@@ -455,9 +464,11 @@ libinput_util_la_SOURCES = \
 	libinput-util.h
 
 libinput_util_la_LIBADD = 
+libinput_util_la_LDFLAGS = $(GCOV_LDFLAGS)
 libinput_util_la_CFLAGS = -I$(top_srcdir)/include \
 			  $(LIBUDEV_CFLAGS) \
-			  $(GCC_CFLAGS)
+			  $(GCC_CFLAGS) \
+			  $(GCOV_CFLAGS)
 
 libfilter_la_SOURCES = \
 	filter.c \
@@ -466,14 +477,11 @@ libfilter_la_SOURCES = \
 
 libfilter_la_LIBADD = 
 libfilter_la_CFLAGS = 
-libinput_la_LDFLAGS = -version-info $(LIBINPUT_LT_VERSION) -shared \
-		      -Wl,--version-script=$(srcdir)/libinput.sym
-
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libinput.pc
 AM_CFLAGS = $(GCC_CFLAGS)
 DISTCLEANFILES = libinput-version.h
-EXTRA_DIST = libinput-version.h.in libinput.sym
+EXTRA_DIST = libinput-version.h.in libinput.sym libinput-restore-selinux-context.sh
 all: all-am
 
 .SUFFIXES:
@@ -576,6 +584,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfilter_la-filter.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libinput_la-evdev-lid.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libinput_la-evdev-middle-button.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libinput_la-evdev-mt-touchpad-buttons.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libinput_la-evdev-mt-touchpad-edge-scroll.Plo@am__quote@
@@ -641,6 +650,13 @@ libinput_la-evdev.lo: evdev.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='evdev.c' object='libinput_la-evdev.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_la_CFLAGS) $(CFLAGS) -c -o libinput_la-evdev.lo `test -f 'evdev.c' || echo '$(srcdir)/'`evdev.c
+
+libinput_la-evdev-lid.lo: evdev-lid.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_la_CFLAGS) $(CFLAGS) -MT libinput_la-evdev-lid.lo -MD -MP -MF $(DEPDIR)/libinput_la-evdev-lid.Tpo -c -o libinput_la-evdev-lid.lo `test -f 'evdev-lid.c' || echo '$(srcdir)/'`evdev-lid.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libinput_la-evdev-lid.Tpo $(DEPDIR)/libinput_la-evdev-lid.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='evdev-lid.c' object='libinput_la-evdev-lid.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_la_CFLAGS) $(CFLAGS) -c -o libinput_la-evdev-lid.lo `test -f 'evdev-lid.c' || echo '$(srcdir)/'`evdev-lid.c
 
 libinput_la-evdev-middle-button.lo: evdev-middle-button.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinput_la_CFLAGS) $(CFLAGS) -MT libinput_la-evdev-middle-button.lo -MD -MP -MF $(DEPDIR)/libinput_la-evdev-middle-button.Tpo -c -o libinput_la-evdev-middle-button.lo `test -f 'evdev-middle-button.c' || echo '$(srcdir)/'`evdev-middle-button.c

@@ -3,6 +3,9 @@
 /* Path to addr2line */
 #undef ADDR2LINE
 
+/* Build debug-gui support */
+#undef BUILD_DEBUG_GUI
+
 /* addr2line found */
 #undef HAVE_ADDR2LINE
 

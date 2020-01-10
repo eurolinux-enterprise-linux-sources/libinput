@@ -93,7 +93,6 @@ tp_get_average_touches_delta(struct tp_dispatch *tp)
 static void
 tp_gesture_start(struct tp_dispatch *tp, uint64_t time)
 {
-	struct libinput *libinput = tp_libinput_context(tp);
 	const struct normalized_coords zero = { 0.0, 0.0 };
 
 	if (tp->gesture.started)
@@ -102,9 +101,9 @@ tp_gesture_start(struct tp_dispatch *tp, uint64_t time)
 	switch (tp->gesture.state) {
 	case GESTURE_STATE_NONE:
 	case GESTURE_STATE_UNKNOWN:
-		log_bug_libinput(libinput,
-				 "%s in unknown gesture mode\n",
-				 __func__);
+		evdev_log_bug_libinput(tp->device,
+				       "%s in unknown gesture mode\n",
+				       __func__);
 		break;
 	case GESTURE_STATE_SCROLL:
 		/* NOP */
@@ -154,13 +153,12 @@ tp_gesture_get_active_touches(const struct tp_dispatch *tp,
 			      struct tp_touch **touches,
 			      unsigned int count)
 {
-	unsigned int i, n = 0;
+	unsigned int n = 0;
 	struct tp_touch *t;
 
 	memset(touches, 0, count * sizeof(struct tp_touch *));
 
-	for (i = 0; i < tp->ntouches; i++) {
-		t = &tp->touches[i];
+	tp_for_each_touch(tp, t) {
 		if (tp_touch_active(tp, t)) {
 			touches[n++] = t;
 			if (n == count)
@@ -185,20 +183,19 @@ static uint32_t
 tp_gesture_get_direction(struct tp_dispatch *tp, struct tp_touch *touch,
 			 unsigned int nfingers)
 {
-	struct normalized_coords normalized;
+	struct phys_coords mm;
 	struct device_float_coords delta;
-	double move_threshold = TP_MM_TO_DPI_NORMALIZED(1);
+	double move_threshold = 1.0; /* mm */
 
 	move_threshold *= (nfingers - 1);
 
 	delta = device_delta(touch->point, touch->gesture.initial);
+	mm = tp_phys_delta(tp, delta);
 
-	normalized = tp_normalize_delta(tp, delta);
-
-	if (normalized_length(normalized) < move_threshold)
+	if (length_in_mm(mm) < move_threshold)
 		return UNDEFINED_DIRECTION;
 
-	return normalized_get_direction(normalized);
+	return phys_get_direction(mm);
 }
 
 static void
@@ -337,6 +334,10 @@ tp_gesture_handle_state_unknown(struct tp_dispatch *tp, uint64_t time)
 		if (tp->gesture.finger_count == 2) {
 			tp_gesture_set_scroll_buildup(tp);
 			return GESTURE_STATE_SCROLL;
+		/* more fingers than slots, don't bother with pinch, always
+		 * assume swipe */
+		} else if (tp->gesture.finger_count > tp->num_slots) {
+			return GESTURE_STATE_SWIPE;
 		}
 
 		/* for 3+ finger gestures, check if one finger is > 20mm
@@ -359,7 +360,8 @@ tp_gesture_handle_state_unknown(struct tp_dispatch *tp, uint64_t time)
 
 	/* If both touches are moving in the same direction assume
 	 * scroll or swipe */
-	if (tp_gesture_same_directions(dir1, dir2)) {
+	if (tp->gesture.finger_count > tp->num_slots ||
+	    tp_gesture_same_directions(dir1, dir2)) {
 		if (tp->gesture.finger_count == 2) {
 			tp_gesture_set_scroll_buildup(tp);
 			return GESTURE_STATE_SCROLL;
@@ -481,10 +483,10 @@ tp_gesture_post_gesture(struct tp_dispatch *tp, uint64_t time)
 		tp->gesture.state =
 			tp_gesture_handle_state_pinch(tp, time);
 
-	log_debug(tp_libinput_context(tp),
-		  "gesture state: %s → %s\n",
-		  gesture_state_to_str(oldstate),
-		  gesture_state_to_str(tp->gesture.state));
+	evdev_log_debug(tp->device,
+			"gesture state: %s → %s\n",
+			gesture_state_to_str(oldstate),
+			gesture_state_to_str(tp->gesture.state));
 }
 
 void
@@ -531,7 +533,6 @@ tp_gesture_stop_twofinger_scroll(struct tp_dispatch *tp, uint64_t time)
 static void
 tp_gesture_end(struct tp_dispatch *tp, uint64_t time, bool cancelled)
 {
-	struct libinput *libinput = tp_libinput_context(tp);
 	enum tp_gesture_state state = tp->gesture.state;
 
 	tp->gesture.state = GESTURE_STATE_NONE;
@@ -542,9 +543,9 @@ tp_gesture_end(struct tp_dispatch *tp, uint64_t time, bool cancelled)
 	switch (state) {
 	case GESTURE_STATE_NONE:
 	case GESTURE_STATE_UNKNOWN:
-		log_bug_libinput(libinput,
-				 "%s in unknown gesture mode\n",
-				 __func__);
+		evdev_log_bug_libinput(tp->device,
+				       "%s in unknown gesture mode\n",
+				       __func__);
 		break;
 	case GESTURE_STATE_SCROLL:
 		tp_gesture_stop_twofinger_scroll(tp, time);

@@ -44,15 +44,6 @@ enum touchpad_event {
 	TOUCHPAD_EVENT_OTHERAXIS	= (1 << 3),
 };
 
-enum touchpad_model {
-	MODEL_UNKNOWN = 0,
-	MODEL_SYNAPTICS,
-	MODEL_ALPS,
-	MODEL_APPLETOUCH,
-	MODEL_ELANTECH,
-	MODEL_UNIBODY_MACBOOK
-};
-
 enum touch_state {
 	TOUCH_NONE = 0,
 	TOUCH_HOVERING,
@@ -66,6 +57,7 @@ enum touch_palm_state {
 	PALM_EDGE,
 	PALM_TYPING,
 	PALM_TRACKPOINT,
+	PALM_TOOL_PALM,
 };
 
 enum button_event {
@@ -152,9 +144,12 @@ struct tp_touch {
 	bool has_ended;				/* TRACKING_ID == -1 */
 	bool dirty;
 	struct device_coords point;
-	uint64_t millis;
-	int distance;				/* distance == 0 means touch */
+	uint64_t time;
 	int pressure;
+	bool is_tool_palm; /* MT_TOOL_PALM */
+
+	bool was_down; /* if distance == 0, false for pure hovering
+			  touches */
 
 	struct {
 		/* A quirk mostly used on Synaptics touchpads. In a
@@ -229,7 +224,6 @@ struct tp_dispatch {
 	unsigned int slot;			/* current slot */
 	bool has_mt;
 	bool semi_mt;
-	bool reports_distance;			/* does the device support true hovering */
 
 	/* true if we're reading events (i.e. not suspended) but we're
 	 * ignoring them */
@@ -244,6 +238,14 @@ struct tp_dispatch {
 	 * ...
 	 */
 	unsigned int fake_touches;
+
+	/* if pressure goes above high -> touch down,
+	   if pressure then goes below low -> touch up */
+	struct {
+		bool use_pressure;
+		int high;
+		int low;
+	} pressure;
 
 	struct device_coords hysteresis_margin;
 
@@ -319,7 +321,8 @@ struct tp_dispatch {
 		struct libinput_timer timer;
 		enum tp_tap_state state;
 		uint32_t buttons_pressed;
-		uint64_t first_press_time;
+		uint64_t saved_press_time,
+			 saved_release_time;
 
 		enum libinput_config_tap_button_map map;
 		enum libinput_config_tap_button_map want_map;
@@ -338,6 +341,8 @@ struct tp_dispatch {
 		uint64_t trackpoint_last_event_time;
 		uint32_t trackpoint_event_count;
 		bool monitor_trackpoint;
+
+		bool use_mt_tool;
 	} palm;
 
 	struct {
@@ -376,7 +381,20 @@ struct tp_dispatch {
 		 */
 		unsigned int nonmotion_event_count;
 	} quirks;
+
+	struct {
+		struct libinput_event_listener lid_switch_listener;
+		struct evdev_device *lid_switch;
+	} lid_switch;
 };
+
+static inline struct tp_dispatch*
+tp_dispatch(struct evdev_dispatch *dispatch)
+{
+	evdev_verify_dispatch_type(dispatch, DISPATCH_TOUCHPAD);
+
+	return container_of(dispatch, struct tp_dispatch, base);
+}
 
 #define tp_for_each_touch(_tp, _t) \
 	for (unsigned int _i = 0; _i < (_tp)->ntouches && (_t = &(_tp)->touches[_i]); _i++)
@@ -397,6 +415,18 @@ tp_normalize_delta(const struct tp_dispatch *tp,
 	normalized.y = delta.y * tp->accel.y_scale_coeff;
 
 	return normalized;
+}
+
+static inline struct phys_coords
+tp_phys_delta(const struct tp_dispatch *tp,
+	      struct device_float_coords delta)
+{
+	struct phys_coords mm;
+
+	mm.x = delta.x / tp->device->abs.absinfo_x->resolution;
+	mm.y = delta.y / tp->device->abs.absinfo_y->resolution;
+
+	return mm;
 }
 
 /**

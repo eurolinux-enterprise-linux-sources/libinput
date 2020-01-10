@@ -165,6 +165,8 @@ EXEEXT = @EXEEXT@
 FGREP = @FGREP@
 GCC_CFLAGS = @GCC_CFLAGS@
 GCC_CXXFLAGS = @GCC_CXXFLAGS@
+GCOV_CFLAGS = @GCOV_CFLAGS@
+GCOV_LDFLAGS = @GCOV_LDFLAGS@
 GREP = @GREP@
 GTK_CFLAGS = @GTK_CFLAGS@
 GTK_LIBS = @GTK_LIBS@
@@ -294,7 +296,7 @@ EXTRA_DIST = middle-button-emulation.svg \
 	$(diagram_files) $(header_files) $(style_files)
 header_files = \
 	$(top_srcdir)/src/libinput.h \
-	$(top_srcdir)/README.txt \
+	$(top_srcdir)/README.md \
 	$(srcdir)/absolute-axes.dox \
 	$(srcdir)/absolute-coordinate-ranges.dox \
 	$(srcdir)/building.dox \
@@ -311,13 +313,17 @@ header_files = \
 	$(srcdir)/reporting-bugs.dox \
 	$(srcdir)/scrolling.dox \
 	$(srcdir)/seats.dox \
+	$(srcdir)/switches.dox \
 	$(srcdir)/t440-support.dox \
 	$(srcdir)/tablet-support.dox \
 	$(srcdir)/tapping.dox \
 	$(srcdir)/test-suite.dox \
+	$(srcdir)/timestamps.dox \
 	$(srcdir)/tools.dox \
 	$(srcdir)/touchpad-jumping-cursors.dox \
-	$(srcdir)/touchpads.dox
+	$(srcdir)/touchpad-pressure.dox \
+	$(srcdir)/touchpads.dox \
+	$(srcdir)/what-is-libinput.dox
 
 diagram_files = \
 	$(srcdir)/dot/seats-sketch.gv \
@@ -357,7 +363,8 @@ style_files = \
 	      style/header.html \
 	      style/footer.html \
 	      style/customdoxygen.css \
-	      style/bootstrap.css
+	      style/bootstrap.css \
+	      style/libinputdoxygen.css
 
 @BUILD_DOCS_TRUE@noinst_DATA = html/index.html
 @BUILD_DOCS_TRUE@doc_src = $(shell find html -type f -printf "html/%P\n" 2>/dev/null)

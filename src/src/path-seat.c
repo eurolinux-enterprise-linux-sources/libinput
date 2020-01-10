@@ -35,9 +35,6 @@
 static const char default_seat[] = "seat0";
 static const char default_seat_name[] = "default";
 
-int path_input_process_event(struct libinput_event);
-static void path_seat_destroy(struct libinput_seat *seat);
-
 static void
 path_disable_device(struct libinput *libinput,
 		    struct evdev_device *device)
@@ -119,10 +116,11 @@ path_device_enable(struct path_input *input,
 	struct path_seat *seat;
 	struct evdev_device *device = NULL;
 	char *seat_name = NULL, *seat_logical_name = NULL;
-	const char *seat_prop;
-	const char *devnode;
+	const char *seat_prop, *output_name;
+	const char *devnode, *sysname;
 
 	devnode = udev_device_get_devnode(udev_device);
+	sysname = udev_device_get_sysname(udev_device);
 
 	seat_prop = udev_device_get_property_value(udev_device, "ID_SEAT");
 	seat_name = strdup(seat_prop ? seat_prop : default_seat);
@@ -136,7 +134,8 @@ path_device_enable(struct path_input *input,
 
 	if (!seat_logical_name) {
 		log_error(&input->base,
-			  "failed to create seat name for device '%s'.\n",
+			  "%s: failed to create seat name for device '%s'.\n",
+			  sysname,
 			  devnode);
 		goto out;
 	}
@@ -149,7 +148,8 @@ path_device_enable(struct path_input *input,
 		seat = path_seat_create(input, seat_name, seat_logical_name);
 		if (!seat) {
 			log_info(&input->base,
-				 "failed to create seat for device '%s'.\n",
+				 "%s: failed to create seat for device '%s'.\n",
+				 sysname,
 				 devnode);
 			goto out;
 		}
@@ -161,17 +161,22 @@ path_device_enable(struct path_input *input,
 	if (device == EVDEV_UNHANDLED_DEVICE) {
 		device = NULL;
 		log_info(&input->base,
-			 "not using input device '%s'.\n",
+			 "%-7s - not using input device '%s'.\n",
+			 sysname,
 			 devnode);
 		goto out;
 	} else if (device == NULL) {
 		log_info(&input->base,
-			 "failed to create input device '%s'.\n",
+			 "%-7s - failed to create input device '%s'.\n",
+			 sysname,
 			 devnode);
 		goto out;
 	}
 
 	evdev_read_calibration_prop(device);
+	output_name = udev_device_get_property_value(udev_device, "WL_OUTPUT");
+	if (output_name)
+		device->output_name = strdup(output_name);
 
 out:
 	free(seat_name);
@@ -244,11 +249,11 @@ path_device_change_seat(struct libinput_device *device,
 			const char *seat_name)
 {
 	struct libinput *libinput = device->seat->libinput;
-	struct evdev_device *evdev_device = (struct evdev_device *)device;
+	struct evdev_device *evdev = evdev_device(device);
 	struct udev_device *udev_device = NULL;
 	int rc = -1;
 
-	udev_device = evdev_device->udev_device;
+	udev_device = evdev->udev_device;
 	udev_device_ref(udev_device);
 	libinput_path_remove_device(device);
 
@@ -361,7 +366,7 @@ libinput_path_remove_device(struct libinput_device *device)
 	struct libinput *libinput = device->seat->libinput;
 	struct path_input *input = (struct path_input*)libinput;
 	struct libinput_seat *seat;
-	struct evdev_device *evdev = (struct evdev_device*)device;
+	struct evdev_device *evdev = evdev_device(device);
 	struct path_device *dev;
 
 	if (libinput->interface_backend != &interface_backend) {
